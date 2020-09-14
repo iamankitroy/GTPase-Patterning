@@ -1,3 +1,5 @@
+#/usr/local/bin/R
+
 #--- This script is used to plot Pyrene Assay fluorometry data
 #--- The script requires a CSV file with time in one column and fluorescence intensities in others
 
