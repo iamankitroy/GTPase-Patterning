@@ -1,3 +1,6 @@
+#--- This script is used to plot Pyrene Assay fluorometry data
+#--- The script requires a CSV file with time in one column and fluorescence intensities in others
+
 library(reshape2)
 library(ggplot2)
 library(dplyr)
@@ -89,3 +92,6 @@ ggsave("/Users/roy/Documents/Project/PyreneAssays/May2020/Profilin-titration_07.
        width = 12,
        units = "in",
        dpi = 300)
+
+# Ankit Roy
+# 13th September, 2020
