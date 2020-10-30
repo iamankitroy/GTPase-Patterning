@@ -1,4 +1,4 @@
-#!//Users/roy/anaconda3/bin/python
+#!/Users/roy/anaconda3/bin/python
 
 #--- This script is used to calculate actin polymerization growth speeds
 #--- Growth speeds are calculated using slope angles derived from kymographs
