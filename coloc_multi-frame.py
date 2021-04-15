@@ -45,6 +45,16 @@ def get_args():
 								default = 512,
 								type = int)
 
+	# First frame
+	parser.add_argument("--first_frame",
+								help = "First frame",
+								type = int)
+
+	# Last frame
+	parser.add_argument("--last_frame",
+								help = "Last frame",
+								type = int)
+
 	args = parser.parse_args()
 
 	return args
@@ -53,6 +63,22 @@ def get_args():
 def dataIN(filename):
 	data = pd.read_csv(filename)
 	return data
+
+#--- Keep specified frames
+def filter_frames(data):
+
+	# filter frames according to user specifed first and last frame
+	# keep frames between first and last
+	if args.first_frame and args.last_frame:
+		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
+	# keep all frames after first
+	elif args.first_frame:
+		data_filtered = data[data["FRAME"] >= args.first_frame]
+	# keep all frames up till the last
+	else:
+		data_filtered = data[data["FRAME"] < args.last_frame]
+
+	return data_filtered
 
 #--- Exclude spots outside field of view
 def filter_fov(data):
@@ -83,6 +109,9 @@ def get_coloc(gtpase_data, gdi_data):
 
 	# Calculate colocalization for every pair of spots per frame
 	for frame in range(1, total_frames):
+		# progress status
+		print("\r# Frame: {}".format(frame), end="", flush=True)
+
 		gtpase_data_frame = gtpase_data[gtpase_data["FRAME"] == frame]
 		gdi_data_frame = gdi_data[gdi_data["FRAME"] == frame]
 		
@@ -110,6 +139,9 @@ def get_coloc(gtpase_data, gdi_data):
 					# Store colocalized GDI spot
 					gdi_coloc = gdi_coloc.append(gdi_data_frame.iloc[gdi_index,], ignore_index=True)
 
+	# progress status
+	print("")
+
 	return (gtpase_coloc, gdi_coloc)
 
 #--- Write output files
@@ -127,6 +159,18 @@ def main():
 	gtpase_data = dataIN(args.gtpase)	# GTPase data
 	gdi_data = dataIN(args.gdi)			# GDI data
 
+	# progress status
+	print("# {:>20s} : {:^50s}".format("GTPase file", args.gtpase))
+	print("# {:>20s} : {:^50s}".format("GDI file", args.gdi))
+	print("# Data imported")
+
+	# filter by first and last frame
+	gtpase_data	= filter_frames(gtpase_data)
+	gdi_data = filter_frames(gdi_data)
+
+	# progress status
+	print("# Frames filtered")
+
 	# filter if custom field of view is set
 	if args.field != 1.0:
 		gtpase_data_fov = filter_fov(gtpase_data)	# filter field of view - GTPase
@@ -135,8 +179,14 @@ def main():
 		gtpase_data_fov = gtpase_data
 		gdi_data_fov = gdi_data
 
+	# progress status
+	print("# Field of view filtered")
+
 	# Get colocalization
 	gtpase_coloc, gdi_coloc = get_coloc(gtpase_data_fov, gdi_data_fov)
+
+	# progress status
+	print("# Colocalizations computed")
 
 	gtpase_count = len(gtpase_data_fov)			# count GTPase spots
 	gdi_count = len(gdi_data_fov)				# count GDI spots
@@ -147,11 +197,14 @@ def main():
 	# fraction of colocalized GDI spots
 	gdi_coloc_frac = round((coloc_count/gdi_count)*100, 2)
 
-	print(gtpase_count, gdi_count, coloc_count, gtpase_coloc_frac, gdi_coloc_frac)
+	print(args.gtpase, args.gdi, gtpase_count, gdi_count, coloc_count, gtpase_coloc_frac, gdi_coloc_frac)
 
 	# Write colocalization files
 	dataOUT(gtpase_coloc, args.gtpase)
 	dataOUT(gdi_coloc, args.gdi)
+
+	# progress status
+	print("# Output files written")
 
 
 #--- Run main function
@@ -161,5 +214,8 @@ main()
 # 11th November, 2020
 # 11th April, 2021		
 #	--> added support for colocalization detection in multiple frames.
-#	--> Colocalized spots are written to output files.
-#	--> Improved code for filtering field of view.
+#	--> colocalized spots are written to output files.
+#	--> improved code for filtering field of view.
+# 15th April, 2021
+#	--> added support for specifying first/last frame.
+#	--> now reports progress.
