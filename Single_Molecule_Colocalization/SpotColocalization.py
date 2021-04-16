@@ -171,7 +171,7 @@ def get_coloc(gtpase_data, gdi_data):
 
 	# combine colocalization results from single frames
 	gtpase_coloc = pd.concat([gp[0] for gp in results if not gp[0].empty])
-	gdi_coloc = pd.concat([gd[0] for gd in results if not gd[0].empty])
+	gdi_coloc = pd.concat([gd[1] for gd in results if not gd[1].empty])
 
 	# progress status
 	print("")
