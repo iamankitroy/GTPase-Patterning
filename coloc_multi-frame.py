@@ -3,6 +3,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+import multiprocessing as mp
 
 #--- Fetch arguments
 def get_args():
@@ -55,6 +56,16 @@ def get_args():
 								help = "Last frame",
 								type = int)
 
+	# Output file type
+	parser.add_argument("--outfile_type",
+								help = "Choose output file type:\
+									0 - All files,\
+									1 - Only colocalization coordinates,\
+									2 - ",
+								choices = [0, 1, 2],
+								default = 0,
+								type = int)
+
 	args = parser.parse_args()
 
 	return args
@@ -96,48 +107,71 @@ def calc_dist(x1, y1, x2, y2):
 	d = np.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 	return round(d, 2)
 
-#--- Get colocalization
-def get_coloc(gtpase_data, gdi_data):
+#--- Get colocalizations for a single frame
+def get_coloc_single(gtpase_data_frame, gdi_data_frame, frame, dist):
+
+	# progress status
+	print("\r# Frame: {}".format(frame), end="", flush=True)
 
 	# colocalized GTPase spots
-	gtpase_coloc = pd.DataFrame(columns = gtpase_data.columns.values)
+	gtpase_coloc = pd.DataFrame(columns = gtpase_data_frame.columns.values)
 	# colocalized GDI spots
-	gdi_coloc = pd.DataFrame(columns = gdi_data.columns.values)
+	gdi_coloc = pd.DataFrame(columns = gdi_data_frame.columns.values)
+
+	# Calculate colocalizations in a single frame
+	for gtpase_index in range(len(gtpase_data_frame)):
+		for gdi_index in range(len(gdi_data_frame)):
+			# GTPase spot coordinates
+			x1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_X"]
+			y1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_Y"]
+
+			# GDI spot coordinates
+			x2 = gdi_data_frame.iloc[gdi_index,]["POSITION_X"]
+			y2 = gdi_data_frame.iloc[gdi_index,]["POSITION_Y"]
+
+			# spot distance
+			d = calc_dist(x1, y1, x2, y2)
+
+			# store colocalized spots
+			if d <= dist:
+				# Store colocalized GTPase spot)
+				gtpase_coloc = gtpase_coloc.append(gtpase_data_frame.iloc[gtpase_index,], ignore_index=True)
+				# Store colocalized GDI spot
+				gdi_coloc = gdi_coloc.append(gdi_data_frame.iloc[gdi_index,], ignore_index=True)
+
+	return [gtpase_coloc, gdi_coloc]
+
+#--- Get all colocalizations
+def get_coloc(gtpase_data, gdi_data):
 
 	# total number of frames
 	total_frames = min(max(gtpase_data["FRAME"]), max(gdi_data["FRAME"]))
 
+	# processes for parallelization
+	processes = []
+
 	# Calculate colocalization for every pair of spots per frame
 	for frame in range(1, total_frames):
-		# progress status
-		print("\r# Frame: {}".format(frame), end="", flush=True)
 
+		# fetch spots from single frame
 		gtpase_data_frame = gtpase_data[gtpase_data["FRAME"] == frame]
 		gdi_data_frame = gdi_data[gdi_data["FRAME"] == frame]
 		
 		# Skip frames that do not have any spots
 		if (len(gtpase_data_frame) == 0) or (len(gdi_data_frame) == 0):
 			continue
-		
-		for gtpase_index in range(len(gtpase_data_frame)):
-			for gdi_index in range(len(gdi_data_frame)):
-				# GTPase spot coordinates
-				x1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_X"]
-				y1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_Y"]
 
-				# GDI spot coordinates
-				x2 = gdi_data_frame.iloc[gdi_index,]["POSITION_X"]
-				y2 = gdi_data_frame.iloc[gdi_index,]["POSITION_Y"]
+		# add sub-process
+		processes.append((gtpase_data_frame, gdi_data_frame, frame, args.dist))
 
-				# spot distance
-				d = calc_dist(x1, y1, x2, y2)
+	# start multiprocessing
+	pool = mp.Pool(mp.cpu_count())
+	results = pool.starmap(get_coloc_single, processes)
+	pool.close
 
-				# store colocalized spots
-				if d <= args.dist:
-					# Store colocalized GTPase spot)
-					gtpase_coloc = gtpase_coloc.append(gtpase_data_frame.iloc[gtpase_index,], ignore_index=True)
-					# Store colocalized GDI spot
-					gdi_coloc = gdi_coloc.append(gdi_data_frame.iloc[gdi_index,], ignore_index=True)
+	# combine colocalization results from single frames
+	gtpase_coloc = pd.concat([gp[0] for gp in results if not gp[0].empty])
+	gdi_coloc = pd.concat([gd[0] for gd in results if not gd[0].empty])
 
 	# progress status
 	print("")
@@ -208,7 +242,8 @@ def main():
 
 
 #--- Run main function
-main()
+if __name__ == '__main__':
+	main()
 
 # Ankit Roy
 # 11th November, 2020
@@ -219,3 +254,6 @@ main()
 # 15th April, 2021
 #	--> added support for specifying first/last frame.
 #	--> now reports progress.
+# 16th April, 2021
+#	--> added support for chosing output files.
+#	--> Parallelized colocalization calculations.
