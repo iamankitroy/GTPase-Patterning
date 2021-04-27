@@ -233,22 +233,6 @@ def main():
 	# progress status
 	print("# Colocalizations computed")
 
-	# gtpase_count = len(gtpase_data_fov)			# count GTPase spots
-	# gdi_count = len(gdi_data_fov)				# count GDI spots
-	# coloc_count = len(gtpase_coloc)				# count colocalized spots
-
-	# # fraction of colocalized GTPase spots
-	# gtpase_coloc_frac = round((coloc_count/gtpase_count)*100, 2)
-	# # fraction of colocalized GDI spots
-	# gdi_coloc_frac = round((coloc_count/gdi_count)*100, 2)
-
-	# print(args.gtpase, args.gdi, gtpase_count, gdi_count, coloc_count, gtpase_coloc_frac, gdi_coloc_frac)
-
-
-	# # Write colocalization files
-	# dataOUT(gtpase_coloc, args.gtpase)
-	# dataOUT(gdi_coloc, args.gdi)
-
 	# combine output
 	combined_coloc = combine_channels(gtpase_coloc, gdi_coloc)
 
