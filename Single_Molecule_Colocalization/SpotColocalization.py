@@ -1,5 +1,14 @@
 #!/Users/roy/anaconda3/bin/python3
 
+""" Identifies colocalized spots in dual channel single molecule data.
+
+Uses spot statistics obtained by tracking single molecule spots with TrackMate (All Spots statistics file).
+Takes in two input spot statistics files for the GTPase channel and the GDI channel respectively.
+Colocalization events are defined as instances where spots from different channels appear within a threshold distance.
+The output file contains a field ("COLOCALIZATION") which indicates whether or not a spot was colocalized.
+The output file has data combined from both the channels and has two additional fields, namely: "COLOCALIZATION" and "CHANNEL". These fields indicate the colocalization status of a spot and the spot's channel respectively.
+"""
+
 import argparse
 import pandas as pd
 import numpy as np
