@@ -5,6 +5,12 @@ import pandas as pd
 import numpy as np
 import multiprocessing as mp
 
+__author__ = "Ankit Roy"
+__copyright__ = "Copyright 2021, Ankit Roy"
+__license__ = "LGPL"
+__maintainer__ = "Ankit Roy"
+__status__ = "Development"
+
 #--- Fetch arguments
 def get_args():
 	parser = argparse.ArgumentParser()
