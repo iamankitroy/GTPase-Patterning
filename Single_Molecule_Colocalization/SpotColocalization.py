@@ -250,7 +250,7 @@ def main():
 	dataOUT(combined_coloc, args.outfile)
 
 	# progress status
-	print("# Output files written")
+	print("# Output written to: {:^50s}".format(args.outfile))
 
 
 #--- Run main function
