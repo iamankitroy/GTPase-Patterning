@@ -6,7 +6,7 @@ import numpy as np
 
 __author__ = "Ankit Roy"
 __copyright__ = "Copyright 2021, Ankit Roy"
-__license__ = "LGPL"
+__license__ = "GPL"
 __maintainer__ = "Ankit Roy"
 __status__ = "Development"
 
