@@ -7,7 +7,7 @@ import multiprocessing as mp
 
 __author__ = "Ankit Roy"
 __copyright__ = "Copyright 2021, Ankit Roy"
-__license__ = "LGPL"
+__license__ = "GPL"
 __maintainer__ = "Ankit Roy"
 __status__ = "Development"
 
@@ -62,15 +62,10 @@ def get_args():
 								help = "Last frame",
 								type = int)
 
-	# Output file type
-	parser.add_argument("--outfile_type",
-								help = "Choose output file type:\
-									0 - All files,\
-									1 - Only colocalization coordinates,\
-									2 - ",
-								choices = [0, 1, 2],
-								default = 0,
-								type = int)
+	# Output file name
+	parser.add_argument("--outfile",
+								help = "Output file name",
+								default = "Colocalization.csv")
 
 	args = parser.parse_args()
 
@@ -120,9 +115,12 @@ def get_coloc_single(gtpase_data_frame, gdi_data_frame, frame, dist):
 	print("\r# Frame: {}".format(frame), end="", flush=True)
 
 	# colocalized GTPase spots
-	gtpase_coloc = pd.DataFrame(columns = gtpase_data_frame.columns.values)
+	gtpase_coloc = gtpase_data_frame
+	gtpase_coloc["COLOCALIZATION"] = False
+	
 	# colocalized GDI spots
-	gdi_coloc = pd.DataFrame(columns = gdi_data_frame.columns.values)
+	gdi_coloc = gdi_data_frame
+	gdi_coloc["COLOCALIZATION"] = False
 
 	# Calculate colocalizations in a single frame
 	for gtpase_index in range(len(gtpase_data_frame)):
@@ -140,10 +138,11 @@ def get_coloc_single(gtpase_data_frame, gdi_data_frame, frame, dist):
 
 			# store colocalized spots
 			if d <= dist:
-				# Store colocalized GTPase spot)
-				gtpase_coloc = gtpase_coloc.append(gtpase_data_frame.iloc[gtpase_index,], ignore_index=True)
-				# Store colocalized GDI spot
-				gdi_coloc = gdi_coloc.append(gdi_data_frame.iloc[gdi_index,], ignore_index=True)
+				# Colocalized GTPase spot
+				gtpase_coloc.loc[(gtpase_coloc["POSITION_X"] == x1) & (gtpase_coloc["POSITION_Y"] == y1), "COLOCALIZATION"] = True
+
+				# Colocalized GDI spot
+				gdi_coloc.loc[(gdi_coloc["POSITION_X"] == x2) & (gdi_coloc["POSITION_Y"] == y2), "COLOCALIZATION"] = True
 
 	return [gtpase_coloc, gdi_coloc]
 
@@ -184,12 +183,18 @@ def get_coloc(gtpase_data, gdi_data):
 
 	return (gtpase_coloc, gdi_coloc)
 
-#--- Write output files
-def dataOUT(data_frame, filename):
-	outname = "{}_coloc.csv".format(filename[:-4])
+#--- Combine channels to single output
+def combine_channels(gtpase_coloc, gdi_coloc):
+	gtpase_coloc["CHANNEL"] = "GTPase"
+	gdi_coloc["CHANNEL"] = "GDI"
+	combine_channels = pd.concat([gtpase_coloc, gdi_coloc])
 
+	return combine_channels
+
+#--- Write output files
+def dataOUT(data_frame, outname):
 	# write CSV file for colocalization events
-	data_frame.to_csv(outname, index=False)
+	data_frame.to_csv(outname, index=False, float_format="%.3f")
 
 #--- Main function
 def main():
@@ -228,20 +233,27 @@ def main():
 	# progress status
 	print("# Colocalizations computed")
 
-	gtpase_count = len(gtpase_data_fov)			# count GTPase spots
-	gdi_count = len(gdi_data_fov)				# count GDI spots
-	coloc_count = len(gtpase_coloc)				# count colocalized spots
+	# gtpase_count = len(gtpase_data_fov)			# count GTPase spots
+	# gdi_count = len(gdi_data_fov)				# count GDI spots
+	# coloc_count = len(gtpase_coloc)				# count colocalized spots
 
-	# fraction of colocalized GTPase spots
-	gtpase_coloc_frac = round((coloc_count/gtpase_count)*100, 2)
-	# fraction of colocalized GDI spots
-	gdi_coloc_frac = round((coloc_count/gdi_count)*100, 2)
+	# # fraction of colocalized GTPase spots
+	# gtpase_coloc_frac = round((coloc_count/gtpase_count)*100, 2)
+	# # fraction of colocalized GDI spots
+	# gdi_coloc_frac = round((coloc_count/gdi_count)*100, 2)
 
-	print(args.gtpase, args.gdi, gtpase_count, gdi_count, coloc_count, gtpase_coloc_frac, gdi_coloc_frac)
+	# print(args.gtpase, args.gdi, gtpase_count, gdi_count, coloc_count, gtpase_coloc_frac, gdi_coloc_frac)
 
-	# Write colocalization files
-	dataOUT(gtpase_coloc, args.gtpase)
-	dataOUT(gdi_coloc, args.gdi)
+
+	# # Write colocalization files
+	# dataOUT(gtpase_coloc, args.gtpase)
+	# dataOUT(gdi_coloc, args.gdi)
+
+	# combine output
+	combined_coloc = combine_channels(gtpase_coloc, gdi_coloc)
+
+	# Write colocalization file
+	dataOUT(combined_coloc, args.outfile)
 
 	# progress status
 	print("# Output files written")
@@ -263,3 +275,7 @@ if __name__ == '__main__':
 # 16th April, 2021
 #	--> added support for chosing output files.
 #	--> Parallelized colocalization calculations.
+# 27th April, 2021
+#	--> removed multiple outputs to streamline script use.
+#	--> script now produces only 1 output file.
+#	--> added ability to specify output file name.
