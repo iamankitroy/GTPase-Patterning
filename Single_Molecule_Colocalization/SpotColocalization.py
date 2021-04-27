@@ -74,7 +74,7 @@ def get_args():
 
 	# Output file name
 	parser.add_argument("--outfile",
-								help = "Output file name",
+								help = "(default = Colocalization.csv) Output file name",
 								default = "Colocalization.csv")
 
 	args = parser.parse_args()
