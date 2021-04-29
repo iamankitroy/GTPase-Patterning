@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 __author__ = "Ankit Roy"
-__copyright__ = "Copyright 2021, Ankit Roy"
+__copyright__ = "Copyright 2021, Bieling Lab, Max Planck Institute of Molecular Physiology"
 __license__ = "GPL"
 __maintainer__ = "Ankit Roy"
 __status__ = "Development"
