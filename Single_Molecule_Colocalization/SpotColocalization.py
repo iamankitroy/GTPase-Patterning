@@ -16,7 +16,7 @@ import numpy as np
 import multiprocessing as mp
 
 __author__ = "Ankit Roy"
-__copyright__ = "Copyright 2021, Ankit Roy"
+__copyright__ = "Copyright 2021, Bieling Lab, Max Planck Institute of Molecular Physiology"
 __license__ = "GPL"
 __maintainer__ = "Ankit Roy"
 __status__ = "Development"
@@ -126,11 +126,13 @@ def get_coloc_single(gtpase_data_frame, gdi_data_frame, frame, dist):
 
 	# colocalized GTPase spots
 	gtpase_coloc = gtpase_data_frame
-	gtpase_coloc["COLOCALIZATION"] = False
+	gtpase_coloc["COLOCALIZED_SPOT"] = False
+	gtpase_coloc["COLOCALIZATION_ID"] = np.nan
 	
 	# colocalized GDI spots
 	gdi_coloc = gdi_data_frame
-	gdi_coloc["COLOCALIZATION"] = False
+	gdi_coloc["COLOCALIZED_SPOT"] = False
+	gdi_coloc["COLOCALIZATION_ID"] = np.nan
 
 	# Calculate colocalizations in a single frame
 	for gtpase_index in range(len(gtpase_data_frame)):
@@ -138,23 +140,38 @@ def get_coloc_single(gtpase_data_frame, gdi_data_frame, frame, dist):
 			# GTPase spot coordinates
 			x1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_X"]
 			y1 = gtpase_data_frame.iloc[gtpase_index,]["POSITION_Y"]
+			id1 = gtpase_data_frame.iloc[gtpase_index,]["PSEUDO_TRACK_ID"]
 
 			# GDI spot coordinates
 			x2 = gdi_data_frame.iloc[gdi_index,]["POSITION_X"]
 			y2 = gdi_data_frame.iloc[gdi_index,]["POSITION_Y"]
+			id2 = gdi_data_frame.iloc[gdi_index,]["PSEUDO_TRACK_ID"]
 
 			# spot distance
 			d = calc_dist(x1, y1, x2, y2)
 
 			# store colocalized spots
 			if d <= dist:
+				# create colocalization id
+				coloc_id = '{}-{}'.format(id1, id2)
+
 				# Colocalized GTPase spot
-				gtpase_coloc.loc[(gtpase_coloc["POSITION_X"] == x1) & (gtpase_coloc["POSITION_Y"] == y1), "COLOCALIZATION"] = True
+				gtpase_coloc.loc[(gtpase_coloc["POSITION_X"] == x1) & (gtpase_coloc["POSITION_Y"] == y1), "COLOCALIZED_SPOT"] = True
+				# Assign colocalization id to GTPase spot
+				gtpase_coloc.loc[(gtpase_coloc["POSITION_X"] == x1) & (gtpase_coloc["POSITION_Y"] == y1), "COLOCALIZATION_ID"] = coloc_id
 
 				# Colocalized GDI spot
-				gdi_coloc.loc[(gdi_coloc["POSITION_X"] == x2) & (gdi_coloc["POSITION_Y"] == y2), "COLOCALIZATION"] = True
+				gdi_coloc.loc[(gdi_coloc["POSITION_X"] == x2) & (gdi_coloc["POSITION_Y"] == y2), "COLOCALIZED_SPOT"] = True
+				# Assign colocalization id to GDI spot
+				gdi_coloc.loc[(gdi_coloc["POSITION_X"] == x2) & (gdi_coloc["POSITION_Y"] == y2), "COLOCALIZATION_ID"] = coloc_id
 
 	return [gtpase_coloc, gdi_coloc]
+
+#--- Add pseudo track IDs
+def add_PsedoTrackID(data):
+	data = data.copy()
+	data["PSEUDO_TRACK_ID"] = data.apply(lambda x: x["TRACK_ID"] if x["TRACK_ID"] != "None" else x["Label"], axis=1)
+	return data
 
 #--- Get all colocalizations
 def get_coloc(gtpase_data, gdi_data):
@@ -237,6 +254,13 @@ def main():
 	# progress status
 	print("# Field of view filtered")
 
+	# Add pseudo track IDs
+	gtpase_data_fov = add_PsedoTrackID(gtpase_data_fov)
+	gdi_data_fov = add_PsedoTrackID(gdi_data_fov)
+
+	# progress status
+	print("# Psedo Track IDs assigned")
+
 	# Get colocalization
 	gtpase_coloc, gdi_coloc = get_coloc(gtpase_data_fov, gdi_data_fov)
 
@@ -273,3 +297,6 @@ if __name__ == '__main__':
 #	--> removed multiple outputs to streamline script use.
 #	--> script now produces only 1 output file.
 #	--> added ability to specify output file name.
+# 29th April, 2021
+#	--> added feature to assign unique colocalization id.
+#	--> colocalization id is written in output file.
