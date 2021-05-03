@@ -19,6 +19,22 @@ def get_args():
     # Spot colocalization file
     required_args.add_argument("-cf", "--colocalization_file",
                                 help = "Spot colocalization file name.")
+
+    # Filteration options
+    parser.add_argument("--filter",
+                                help = "Filter based on 1) FREE_FRAME_COUNT or 2) COLOCALIZED_FRAME_FRACTION",
+                                choices = ['1', '2'],
+                                default = '0')
+
+    # Filter by free frames in GDI channel
+    parser.add_argument("--free_frames",
+                                help = "Filter by the maximum number of frames GDI spots can remain un-colocalized.",
+                                default = 0)
+
+    # Filter by colocalization fraction of GDI channel
+    parser.add_argument("--colocalization_fraction",
+                                help = "Filter by the minimum fraction of frames that GDI spots should remain be colocalized.",
+                                default = 1)
     
     args = parser.parse_args()
 
@@ -87,6 +103,71 @@ def count_ColocalizedFrames(data):
 
     return data
 
+#--- Channel based filter
+def filter_channel(data, channel, pseudo_ids):
+    data = data.copy()
+    channel_filter = data["CHANNEL"] == channel                 # filter CHANNEL
+    pseudo_id_filter = data["PSEUDO_TRACK_ID"].isin(pseudo_ids) # filter PSEUDO_TRACK_ID
+
+    data = data.loc[channel_filter & pseudo_id_filter, ]        # combine filters
+
+    return data
+
+#--- Filter GDI tracks based on un-colocalized frames
+def filter_freeFrames(data, count):
+    data = data.copy()
+
+    # COLOCALIZATION_ID of GDI tracks that remain un-colocalized for <= user defined number of frames
+    coloc_ids = set(data.loc[(data["FREE_FRAME_COUNT"] <= count) & (data["CHANNEL"] == "GDI"), "COLOCALIZATION_ID"])
+    
+    # GTPase and GDI ids of desired COLOCALIZATION_ID
+    gtpase_ids = [i.split('-')[0] for i in coloc_ids]
+    gdi_ids = [i.split('-')[1] for i in coloc_ids]
+
+    # Apply filters and combine
+    gtpase_filtered = filter_channel(data, "GTPase", gtpase_ids)
+    gdi_filtered = filter_channel(data, "GDI", gdi_ids)
+    data_filtered = pd.concat([gtpase_filtered, gdi_filtered])
+    
+    return data_filtered
+
+#--- Filter GDI tracks based on colocalization fraction
+def filter_colocFrameFraction(data, fraction):
+    data = data.copy()
+
+    # COLOCALIZATION_ID of GDI tracks with colocalization fraction >= user defined fraction
+    coloc_ids = set(data.loc[(data["COLOCALIZED_FRAME_FRACTION"] >= fraction) & (data["CHANNEL"] == "GDI"), "COLOCALIZATION_ID"])
+
+    # GTPase and GDI ids of desired COLOCALIZATION_ID
+    gtpase_ids = [i.split('-')[0] for i in coloc_ids]
+    gdi_ids = [i.split('-')[1] for i in coloc_ids]
+
+    # Apply filters and combine
+    gtpase_filtered = filter_channel(data, "GTPase", gtpase_ids)
+    gdi_filtered = filter_channel(data, "GDI", gdi_ids)
+    data_filtered = pd.concat([gtpase_filtered, gdi_filtered])
+
+    return data_filtered
+
+# All colocalization statistics:
+def displayStat(all_data, subset_data, input_file):
+    # Count all GTPase tracks
+    total_gtpase_tracks = len(set(all_data.loc[all_data["CHANNEL"] == "GTPase", "PSEUDO_TRACK_ID"]))
+    # Count all GDI tracks
+    total_gdi_tracks = len(set(all_data.loc[all_data["CHANNEL"] == "GDI", "PSEUDO_TRACK_ID"]))
+    # Count colocalized GTPase tracks
+    coloc_gtpase_tracks = len(set(subset_data.loc[subset_data["CHANNEL"] == "GTPase", "PSEUDO_TRACK_ID"]))
+    # Count colocalized GDI tracks
+    coloc_gdi_tracks = len(set(subset_data.loc[subset_data["CHANNEL"] == "GDI", "PSEUDO_TRACK_ID"]))
+    # Percentage of colocalized GTPase tracks
+    percent_coloc_gtpase = coloc_gtpase_tracks/total_gtpase_tracks * 100
+    # Percentage of colocalized GDI tracks
+    percent_coloc_gdi = coloc_gdi_tracks/total_gdi_tracks * 100
+
+    # Display stats
+    print("#{}\t{}\t{}\t{}\t{}\t{}\t{}".format("File_Name", "GTPase_Count", "GDI_Count", "Colocalized_GTPase_Count", "Colocalized_GDI_Count", "Percent_Colocalized_GTPase", "Percent_Colocalized_GDI"))
+    print("{}\t{}\t{}\t{}\t{}\t{:.2f}\t{:.2f}".format(input_file, total_gtpase_tracks, total_gdi_tracks, coloc_gtpase_tracks, coloc_gdi_tracks, percent_coloc_gtpase, percent_coloc_gdi))
+
 #--- Main function
 def main():
     global args
@@ -103,9 +184,23 @@ def main():
     # Get number of colocalized frames
     sub_coloc_data = count_ColocalizedFrames(sub_coloc_data)
     
+    if int(args.filter) == 1:
+        # Filter GDI tracks based on the number of uncolocalized frames
+        sub_coloc_data = filter_freeFrames(sub_coloc_data, args.free_frames)
+    elif int(args.filter) == 2:
+        # Filter GDI tracks based on fraction of colocalized frames
+        sub_coloc_data = filter_colocFrameFraction(sub_coloc_data, args.colocalization_fraction)
+
+    # Show colocalization statistics
+    displayStat(coloc_data, sub_coloc_data, args.colocalization_file)
+
 #--- Run main function
 if __name__ == '__main__':
     main()
 
 # Ankit Roy
 # 29th April, 2021
+# 3rd May, 2021
+#   --> Added ability to filter based on the number of free frames in GDI tracks
+#   --> Added ability to filter based on the fraction of colocalized frames in GDI tracks
+#   --> Displays track based colocalization statistics
