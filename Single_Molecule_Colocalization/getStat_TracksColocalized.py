@@ -35,6 +35,24 @@ def get_args():
     parser.add_argument("--colocalization_fraction",
                                 help = "Filter by the minimum fraction of frames that GDI spots should remain be colocalized.",
                                 default = 1)
+
+    # Field of view cutoff
+    parser.add_argument("-fov", "--field",
+                                help = "(default = 1.00) Field of view",
+                                default = 1.00,
+                                type = float)
+
+    # Pixel size
+    parser.add_argument("-ps", "--pixel_size",
+								help = "(default = 0.178 µm) Pixel size",
+								default = 0.178,
+								type = float)
+
+    # Image size
+    parser.add_argument("-is", "--image_size",
+								help = "(default = 512 px) Image size",
+								default = 512,
+								type = int)
     
     args = parser.parse_args()
 
@@ -149,8 +167,27 @@ def filter_colocFrameFraction(data, fraction):
 
     return data_filtered
 
-# All colocalization statistics:
-def displayStat(all_data, subset_data, input_file):
+#--- Calculate landing rate
+def calcLandingRate(data):
+    fov = args.field                # field of view
+    image_size = args.image_size    # image size in pixels
+    pixel_size = args.pixel_size    # pixel size in µm
+
+    # Total number of frames
+    total_frames = max(set(data["FRAME"]))
+    
+    # Number of landing events
+    gtpase_landing = len(set(data.loc[data["CHANNEL"] == "GTPase", "PSEUDO_TRACK_ID"]))
+    gdi_landing = len(set(data.loc[data["CHANNEL"] == "GDI", "PSEUDO_TRACK_ID"]))
+
+    # Landing rate
+    gtpase_landing_rate = gtpase_landing/(total_frames * image_size * pixel_size * fov)
+    gdi_landing_rate = gdi_landing/(total_frames * image_size * pixel_size * fov)
+    
+    return (gtpase_landing_rate, gdi_landing_rate)
+
+#--- All colocalization statistics:
+def getStat(all_data, subset_data, input_file):
     # Count all GTPase tracks
     total_gtpase_tracks = len(set(all_data.loc[all_data["CHANNEL"] == "GTPase", "PSEUDO_TRACK_ID"]))
     # Count all GDI tracks
@@ -164,9 +201,28 @@ def displayStat(all_data, subset_data, input_file):
     # Percentage of colocalized GDI tracks
     percent_coloc_gdi = coloc_gdi_tracks/total_gdi_tracks * 100
 
+    # Calculate landing rate
+    gtpase_landing_rate, gdi_landing_rate = calcLandingRate(all_data)
+
     # Display stats
-    print("#{}\t{}\t{}\t{}\t{}\t{}\t{}".format("File_Name", "GTPase_Count", "GDI_Count", "Colocalized_GTPase_Count", "Colocalized_GDI_Count", "Percent_Colocalized_GTPase", "Percent_Colocalized_GDI"))
-    print("{}\t{}\t{}\t{}\t{}\t{:.2f}\t{:.2f}".format(input_file, total_gtpase_tracks, total_gdi_tracks, coloc_gtpase_tracks, coloc_gdi_tracks, percent_coloc_gtpase, percent_coloc_gdi))
+    header = "# {},{},{},{},{},{},{},{},{}\n".format("File_Name", "GTPase_Count", "GDI_Count", "Colocalized_GTPase_Count", "Colocalized_GDI_Count", "Percent_Colocalized_GTPase", "Percent_Colocalized_GDI", "GTPase_Landing_Rate", "GDI_Landing_Rate")
+    stat_line = "# {},{},{},{},{},{:.2f},{:.2f},{:.2E},{:.2E}\n".format(input_file, total_gtpase_tracks, total_gdi_tracks, coloc_gtpase_tracks, coloc_gdi_tracks, percent_coloc_gtpase, percent_coloc_gdi, gtpase_landing_rate, gdi_landing_rate)
+
+    return (header, stat_line)
+
+#--- Write output files
+def dataOUT(data_frame, outname, header, stat_line):
+    outname = "{}_subset.csv".format(outname.split('.csv')[0])
+    
+    # write header and statistics
+    with open(outname, 'w') as fh:
+        fh.write("# Summary lines\n")
+        fh.write(header)
+        fh.write(stat_line)
+        fh.write("# Colocalized data lines below\n")
+
+    # write CSV file for colocalization events
+    data_frame.to_csv(outname, index=False, float_format="%.3f", mode = 'a')
 
 #--- Main function
 def main():
@@ -192,7 +248,10 @@ def main():
         sub_coloc_data = filter_colocFrameFraction(sub_coloc_data, args.colocalization_fraction)
 
     # Show colocalization statistics
-    displayStat(coloc_data, sub_coloc_data, args.colocalization_file)
+    header, stat_line = getStat(coloc_data, sub_coloc_data, args.colocalization_file)
+
+    # Wtite output file
+    dataOUT(sub_coloc_data, args.colocalization_file, header, stat_line)
 
 #--- Run main function
 if __name__ == '__main__':
@@ -204,3 +263,6 @@ if __name__ == '__main__':
 #   --> Added ability to filter based on the number of free frames in GDI tracks
 #   --> Added ability to filter based on the fraction of colocalized frames in GDI tracks
 #   --> Displays track based colocalization statistics
+# 6th April, 2021
+#   --> Now calculates landing rate in terms of tracks per µm^2
+#   --> Stores colocalization statistics along with data in output CSV file
