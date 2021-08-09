@@ -225,8 +225,15 @@ def combine_channels(gtpase_coloc, gdi_coloc):
 
 #--- Write output files
 def dataOUT(data_frame, outname):
+	# write parameters as meta data
+	with open(outname, "w") as fh:
+		fh.write("# {:=^40}\n".format(" Meta-data lines "))
+		for arg in vars(args):
+			fh.write("# {}: {}\n".format(arg, getattr(args, arg)))
+		fh.write("# {:=^40}\n".format(" Colocalization data lines "))
+
 	# write CSV file for colocalization events
-	data_frame.to_csv(outname, index=False, float_format="%.3f")
+	data_frame.to_csv(outname, index=False, float_format="%.3f", mode="a")
 
 #--- Main function
 def main():
@@ -305,3 +312,5 @@ if __name__ == '__main__':
 # 29th April, 2021
 #	--> added feature to assign unique colocalization id.
 #	--> colocalization id is written in output file.
+# 9th August, 2021
+#	--> now adds input arguments as meta data to output files.

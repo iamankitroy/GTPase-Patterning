@@ -61,7 +61,7 @@ def get_args():
 
 #--- Get data
 def dataIN(filename):
-	data = pd.read_csv(filename)
+	data = pd.read_csv(filename, comment="#")
 	return data
 
 #--- Modify field
@@ -217,10 +217,13 @@ def dataOUT(data_frame, outname, header, stat_line):
     
     # write header and statistics
     with open(outname, 'w') as fh:
-        fh.write("# Summary lines\n")
+        fh.write("# {:=^40}\n".format(" Meta-data lines "))
+        for arg in vars(args):
+            fh.write("# {}: {}\n".format(arg, getattr(args, arg)))
+        fh.write("# {:=^40}\n".format(" Summary lines "))
         fh.write(header)
         fh.write(stat_line)
-        fh.write("# Colocalized data lines below\n")
+        fh.write("# {:=^40}\n".format(" Colocalization data lines "))
 
     # write CSV file for colocalization events
     data_frame.to_csv(outname, index=False, float_format="%.3f", mode = 'a')
@@ -270,3 +273,5 @@ if __name__ == '__main__':
 #   --> Stores colocalization statistics along with data in output CSV file
 # 9th August, 2021
 #   --> Colocalization file argurent set to a required argument
+#   --> Ignores comment lines from colocalization file
+#   --> Now adds input arguments as meta-data to output files.
