@@ -240,7 +240,8 @@ def main():
 
     # Get number of colocalized frames
     sub_coloc_data = count_ColocalizedFrames(sub_coloc_data)
-    
+
+    # This is still experimental!!    
     if int(args.filter) == 1:
         # Filter GDI tracks based on the number of uncolocalized frames
         sub_coloc_data = filter_freeFrames(sub_coloc_data, args.free_frames)
