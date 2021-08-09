@@ -18,7 +18,8 @@ def get_args():
 
     # Spot colocalization file
     required_args.add_argument("-cf", "--colocalization_file",
-                                help = "Spot colocalization file name.")
+                                help = "Spot colocalization file name.",
+                                required = True)
 
     # Filteration options
     parser.add_argument("--filter",
@@ -266,3 +267,5 @@ if __name__ == '__main__':
 # 6th April, 2021
 #   --> Now calculates landing rate in terms of tracks per µm^2
 #   --> Stores colocalization statistics along with data in output CSV file
+# 9th August, 2021
+#   --> Colocalization file argurent set to a required argument
