@@ -1,6 +1,7 @@
 #!/Users/roy/anaconda3/bin/python3
 
-""" Identifies colocalized spots in dual channel single molecule data.
+"""
+Identifies colocalized spots in dual channel single molecule data.
 
 Uses spot statistics obtained by tracking single molecule spots with TrackMate (All Spots statistics file).
 Takes in two input spot statistics files for the GTPase channel and the GDI channel respectively.
