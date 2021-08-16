@@ -76,8 +76,6 @@ function run_processes()
 	for param_line in ${all_params[@]}
 	do
 		params=(`echo $param_line | tr ',' '\n'`)	# parameters
-		#arg_list_SC=()
-		#arg_list_gS_TC=()
 		declare -A arg_list							# argument list
 		set_default_arguments						# setting defaults
 
@@ -86,11 +84,6 @@ function run_processes()
 			key=${args[$field_num]}					# argument name
 			value=${params[$field_num]}				# argument value
 			arg_list[$key]=$value					# store argument name and value pair
-
-			# add colocalization file name argument for getStat_TrackColocalized
-			#if [[ "${args[$field_num]}" = "--outfile" ]]; then
-			#	arg_list_gS_TC=`echo "-cf ${params[$field_num]}"`
-			#fi
 		done
 
 		# run SpotColocalization
@@ -128,3 +121,5 @@ automate
 
 # Ankit Roy
 # 13th August, 2021
+# 16th August, 2021
+#	-->	Updated script to use associative arrays to parse argparse arguments
