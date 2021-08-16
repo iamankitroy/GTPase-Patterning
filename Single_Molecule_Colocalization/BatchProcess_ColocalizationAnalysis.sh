@@ -1,10 +1,7 @@
 #!/usr/local/bin/zsh
 
-"""
-!! Dependecies !!
-The script makes use of associative arrays. Please make sure you use Bash 4.0 or higher OR Zsh to run the script.
-
-"""
+# !! Dependecies !!
+# The script makes use of associative arrays. Please make sure you use Bash 4.0 or higher OR Zsh to run the script.
 
 # This script is used to batch process the colocalization analysis
 
@@ -48,7 +45,7 @@ function run_SpotColocalization()
 function run_getStat_TrackColocalized()
 {
 	echo -e "\nRunning getStat_TrackColocalized...\n"
-	python getStat_TracksColocalized.py -fov ${arg_list[-fov]} -cf ${arg_list[--outfile]}
+	python getStat_TracksColocalized.py -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} -cf ${arg_list[--outfile]}
 	echo -e "\nComplete!\n"
 }
 
