@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# This script renames all CSV files in the working directory
-# Files are renamed such that all whitespaces are replaced by underscores
+"""
+This script renames all CSV files in the working directory
+Files are renamed such that all whitespaces are replaced by underscores
+"""
 
 IFS=$'\n'
 
