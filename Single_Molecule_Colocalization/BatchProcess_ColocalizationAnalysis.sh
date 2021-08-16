@@ -111,7 +111,7 @@ function automate()
 	clean_parameter_file
 	echo "Parameter file cleaned."
 
-	echo "Batch processing started!"
+	echo "\n========== Batch processing started! =========="
 	run_processes
 	echo "Batch processing complete!"
 }
