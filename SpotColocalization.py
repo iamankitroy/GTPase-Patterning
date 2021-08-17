@@ -78,6 +78,12 @@ def get_args():
 								help = "Last frame",
 								type = int)
 
+	# Keep initial tracks
+	parser.add_argument("--keep_initial_tracks",
+								help = "Keep tracks that originate before first frame",
+								default = False,
+								action = "store_true")
+
 	# Output file name
 	parser.add_argument("--outfile",
 								help = "(default = Colocalization.csv) Output file name",
@@ -103,18 +109,31 @@ def filter_frames(data):
 
 	# filter frames according to user specifed first and last frame
 	# keep frames between first and last
-	# eliminate tracks that originate before first frame
 	if args.first_frame and args.last_frame:
-		# pre-existing tracks
-		preexisting_tracks = set(data[data["FRAME"] < args.first_frame]["TRACK_ID"])
-		preexisting_tracks = [n for n in preexisting_tracks if n != "None"]
-		# eliminate pre-existing tracks
-		data = drop_rows(data, "TRACK_ID", preexisting_tracks)
+		# eliminate tracks that originate before first frame
+		if not args.keep_initial_tracks:
+			# pre-existing tracks
+			preexisting_tracks = set(data[data["FRAME"] < args.first_frame]["TRACK_ID"])
+			preexisting_tracks = [n for n in preexisting_tracks if n != "None"]
+			# eliminate pre-existing tracks
+			data = drop_rows(data, "TRACK_ID", preexisting_tracks)
+
 		# filter by start and end frame
 		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
+
 	# keep all frames after first
 	elif args.first_frame:
+		# eliminate tracks that originate before first frame
+		if not args.keep_initial_tracks:
+			# pre-existing tracks
+			preexisting_tracks = set(data[data["FRAME"] < args.first_frame]["TRACK_ID"])
+			preexisting_tracks = [n for n in preexisting_tracks if n != "None"]
+			# eliminate pre-existing tracks
+			data = drop_rows(data, "TRACK_ID", preexisting_tracks)
+		
+		# filter by start frame
 		data_filtered = data[data["FRAME"] >= args.first_frame]
+
 	# keep all frames up till the last
 	else:
 		data_filtered = data[data["FRAME"] < args.last_frame]
@@ -330,3 +349,4 @@ if __name__ == '__main__':
 #	--> Now adds input arguments as meta data to output files.
 # 17th August, 2021
 #	--> Now eliminates tracks that originate before first frame
+#	--> Added option to keep tracks that originate before first frame
