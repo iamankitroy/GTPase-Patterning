@@ -92,12 +92,25 @@ def dataIN(filename):
 	data = pd.read_csv(filename)
 	return data
 
+#--- Remove data lines statisfying a condition
+def drop_rows(data, field, values):
+	for value in values:
+		data = data[data[field] != value]
+	return data
+
 #--- Keep specified frames
 def filter_frames(data):
 
 	# filter frames according to user specifed first and last frame
 	# keep frames between first and last
+	# eliminate tracks that originate before first frame
 	if args.first_frame and args.last_frame:
+		# pre-existing tracks
+		preexisting_tracks = set(data[data["FRAME"] < args.first_frame]["TRACK_ID"])
+		preexisting_tracks = [n for n in preexisting_tracks if n != "None"]
+		# eliminate pre-existing tracks
+		data = drop_rows(data, "TRACK_ID", preexisting_tracks)
+		# filter by start and end frame
 		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
 	# keep all frames after first
 	elif args.first_frame:
