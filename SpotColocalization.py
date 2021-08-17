@@ -80,7 +80,7 @@ def get_args():
 
 	# Keep initial tracks
 	parser.add_argument("--keep_initial_tracks",
-								help = "Keep tracks that originate before first frame",
+								help = "(default = False) Keep tracks that originate before first frame",
 								choices = ['True', 'False'],
 								default = 'False')
 
