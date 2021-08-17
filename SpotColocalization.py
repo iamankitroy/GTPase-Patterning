@@ -310,21 +310,23 @@ if __name__ == '__main__':
 # Ankit Roy
 # 11th November, 2020
 # 11th April, 2021		
-#	--> added support for colocalization detection in multiple frames.
-#	--> colocalized spots are written to output files.
-#	--> improved code for filtering field of view.
+#	--> Added support for colocalization detection in multiple frames.
+#	--> Colocalized spots are written to output files.
+#	--> Improved code for filtering field of view.
 # 15th April, 2021
-#	--> added support for specifying first/last frame.
-#	--> now reports progress.
+#	--> Added support for specifying first/last frame.
+#	--> Now reports progress.
 # 16th April, 2021
-#	--> added support for chosing output files.
+#	--> Added support for chosing output files.
 #	--> Parallelized colocalization calculations.
 # 27th April, 2021
-#	--> removed multiple outputs to streamline script use.
-#	--> script now produces only 1 output file.
-#	--> added ability to specify output file name.
+#	--> Removed multiple outputs to streamline script use.
+#	--> Script now produces only 1 output file.
+#	--> Added ability to specify output file name.
 # 29th April, 2021
-#	--> added feature to assign unique colocalization id.
-#	--> colocalization id is written in output file.
+#	--> Added feature to assign unique colocalization id.
+#	--> Colocalization id is written in output file.
 # 9th August, 2021
-#	--> now adds input arguments as meta data to output files.
+#	--> Now adds input arguments as meta data to output files.
+# 17th August, 2021
+#	--> Now eliminates tracks that originate before first frame
