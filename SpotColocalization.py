@@ -81,8 +81,8 @@ def get_args():
 	# Keep initial tracks
 	parser.add_argument("--keep_initial_tracks",
 								help = "Keep tracks that originate before first frame",
-								default = False,
-								action = "store_true")
+								choices = ['True', 'False'],
+								default = 'False')
 
 	# Output file name
 	parser.add_argument("--outfile",
@@ -117,15 +117,16 @@ def filter_frames(data):
 	# keep frames between first and last
 	if args.first_frame and args.last_frame:
 		# eliminate tracks that originate before first frame
-		if not args.keep_initial_tracks:
+		if not (args.keep_initial_tracks == "True"):
 			data = eliminate_preexisting_tracks(data)
+			print("I am in the loop")
 		# filter by start and end frame
 		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
 
 	# keep all frames after first
 	elif args.first_frame:
 		# eliminate tracks that originate before first frame
-		if not args.keep_initial_tracks:
+		if not (args.keep_initial_tracks == "True"):
 			data = eliminate_preexisting_tracks(data)
 		# filter by start frame
 		data_filtered = data[data["FRAME"] >= args.first_frame]
