@@ -170,18 +170,18 @@ def get_trueEvents(data, coloc_id, condition, frame_threshold):
     # Identify recruitment events
     if condition == "recruitment":
         # GTPase enters
-        enter_gtpase = min(data.loc[data["PSEUDO_TRACK_ID"] == gtpase_id, "FRAME"])
+        enter_gtpase = min(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
         # First colocalization event of GTPase
-        first_coloc = min(data.loc[data["COLOCALIZATION_ID"] == coloc_id, "FRAME"])
+        first_coloc = min(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
         
         # True if colocalization within first few frames of GTPase
         return (first_coloc - enter_gtpase) < frame_threshold
 
     else:
         # GTPase exits
-        exit_gtpase = max(data.loc[data["PSEUDO_TRACK_ID"] == gtpase_id, "FRAME"])
+        exit_gtpase = max(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
         # Last colocalization event of GTPase
-        last_coloc = max(data.loc[data["COLOCALIZATION_ID"] == coloc_id, "FRAME"])
+        last_coloc = max(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
 
         # True if colocalization within last few frames of GTPase
         return (exit_gtpase - last_coloc) < frame_threshold
@@ -223,10 +223,10 @@ def annoteTracks(data, recruitment_events, extraction_events):
     intersection_gtpase = recruited_gtpase.intersection(extracted_gtpase)
     intersection_gdi = recruited_gdi.intersection(extracted_gdi)
 
-    print(len(recruited_gtpase), len(recruited_gdi))
-    print(len(extracted_gtpase), len(extracted_gdi))
-    testthis = sorted([c.split('-')[1] for g in recruited_gtpase for c in recruitment_events if g == c.split('-')[0]])
-    print(Counter(testthis))
+    # print(len(recruited_gtpase), len(recruited_gdi))
+    # print(len(extracted_gtpase), len(extracted_gdi))
+    # testthis = sorted([c.split('-')[1] for g in recruited_gtpase for c in recruitment_events if g == c.split('-')[0]])
+    # print(Counter(testthis))
 
     # Exclusively recruited or extracted tracks
     recruited_gtpase = recruited_gtpase - intersection_gtpase
@@ -234,13 +234,29 @@ def annoteTracks(data, recruitment_events, extraction_events):
     recruited_gdi = recruited_gdi - intersection_gdi
     extracted_gdi = extracted_gdi - intersection_gdi
 
+    # Annotate tracks
+    # Recruited and extracted GTPases
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Recruitment and Extraction" if ((x["CHANNEL"] == "GTPase") and (x["PSEUDO_TRACK_ID"] in intersection_gtpase)) else x["ANNOTATION_TRACK"], axis = 1)
+    # Only recruited GTPases
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Recruitment" if ((x["CHANNEL"] == "GTPase") and (x["PSEUDO_TRACK_ID"] in recruited_gtpase)) else x["ANNOTATION_TRACK"], axis = 1)
+    # Only extracted GTPases
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Extraction" if ((x["CHANNEL"] == "GTPase") and (x["PSEUDO_TRACK_ID"] in extracted_gtpase)) else x["ANNOTATION_TRACK"], axis = 1)
+    # Recruited and extracted GDI
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Recruitment and Extraction" if ((x["CHANNEL"] == "GDI") and (x["PSEUDO_TRACK_ID"] in intersection_gdi)) else x["ANNOTATION_TRACK"], axis = 1)
+    # Only recruited GDI
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Recruitment" if ((x["CHANNEL"] == "GDI") and (x["PSEUDO_TRACK_ID"] in recruited_gdi)) else x["ANNOTATION_TRACK"], axis = 1)
+    # Only extracted GDI
+    data["ANNOTATION_TRACK"] = data.apply(lambda x: "Extraction" if ((x["CHANNEL"] == "GDI") and (x["PSEUDO_TRACK_ID"] in extracted_gdi)) else x["ANNOTATION_TRACK"], axis = 1)
+
     # testthis = sorted([c.split('-')[1] for g in recruited_gtpase for c in recruitment_events if g == c.split('-')[0]])
     # print(testthis)
     # print(len(testthis))
     # print(len(set(testthis)))
 
-    print("GTPase: Recruited - {}, Extracted - {}, Both - {}".format(len(recruited_gtpase), len(extracted_gtpase), len(intersection_gtpase)))
-    print("GDI: Recruited - {}, Extracted - {}, Both - {}".format(len(recruited_gdi), len(extracted_gdi), len(intersection_gdi)))
+    # print("GTPase: Recruited - {}, Extracted - {}, Both - {}".format(len(recruited_gtpase), len(extracted_gtpase), len(intersection_gtpase)))
+    # print("GDI: Recruited - {}, Extracted - {}, Both - {}".format(len(recruited_gdi), len(extracted_gdi), len(intersection_gdi)))
+
+    return data
 
 #--- Annotate events as recruitment or extraction events
 def annotateEvents(data, recruitment_frame_threshold, extraction_frame_threshold):
@@ -260,11 +276,12 @@ def annotateEvents(data, recruitment_frame_threshold, extraction_frame_threshold
     data = annoteSpots(data, recruitment_events, extraction_events)
 
     # Annotate tracks
-    annoteTracks(data, recruitment_events, extraction_events)
+    data = annoteTracks(data, recruitment_events, extraction_events)
 
-    
+    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    #     print(data.loc[(data["CHANNEL"] == "GTPase") & (data["ANNOTATION_TRACK"] == "Recruitment and Extraction"), ].groupby("PSEUDO_TRACK_ID").agg('count')[["FRAME", "ANNOTATION_TRACK"]])
 
-    sys.exit()
+    return data
 
 #--- Calculate landing rate
 def calcLandingRate(data):
@@ -299,13 +316,77 @@ def getStat(all_data, subset_data, input_file):
     percent_coloc_gtpase = coloc_gtpase_tracks/total_gtpase_tracks * 100
     # Percentage of colocalized GDI tracks
     percent_coloc_gdi = coloc_gdi_tracks/total_gdi_tracks * 100
+    # Count recruited GTPases
+    recruited_gtpase = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GTPase") & (subset_data["ANNOTATION_TRACK"] == "Recruitment"), "PSEUDO_TRACK_ID"]))
+    # Count extracted GTPases
+    extracted_gtpase = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GTPase") & (subset_data["ANNOTATION_TRACK"] == "Extraction"), "PSEUDO_TRACK_ID"]))
+    # Count recruited and extracted GTPases
+    intersection_gtpase = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GTPase") & (subset_data["ANNOTATION_TRACK"] == "Recruitment and Extraction"), "PSEUDO_TRACK_ID"]))
+    # Count recruited GDI
+    recruited_gdi = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GDI") & (subset_data["ANNOTATION_TRACK"] == "Recruitment"), "PSEUDO_TRACK_ID"]))
+    # Count extracted GTPases
+    extracted_gdi = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GDI") & (subset_data["ANNOTATION_TRACK"] == "Extraction"), "PSEUDO_TRACK_ID"]))
+    # Count recruited and extracted GTPases
+    intersection_gdi = len(set(subset_data.loc[(subset_data["CHANNEL"] == "GDI") & (subset_data["ANNOTATION_TRACK"] == "Recruitment and Extraction"), "PSEUDO_TRACK_ID"]))
+    # Percentage of recruited GTPases
+    percentage_recruited_gtpase = recruited_gtpase/total_gtpase_tracks * 100
+    # Percentage of extracted GTPases
+    percentage_extracted_gtpase = extracted_gtpase/total_gtpase_tracks * 100
+    # Percentage of recruited and extracted GTPases
+    percentage_intersection_gtpase = intersection_gtpase/total_gtpase_tracks * 100
+    # Percentage of recruited GDI
+    percentage_recruited_gdi = recruited_gdi/total_gdi_tracks * 100
+    # Percentage of extracted GDI
+    percentage_extracted_gdi = extracted_gdi/total_gdi_tracks * 100
+    # Percentage of recruited and extracted GDI
+    percentage_intersection_gdi = intersection_gdi/total_gdi_tracks * 100
 
     # Calculate landing rate
     gtpase_landing_rate, gdi_landing_rate = calcLandingRate(all_data)
 
     # Display stats
-    header = "# {},{},{},{},{},{},{},{},{}\n".format("File_Name", "GTPase_Count", "GDI_Count", "Colocalized_GTPase_Count", "Colocalized_GDI_Count", "Percent_Colocalized_GTPase", "Percent_Colocalized_GDI", "GTPase_Landing_Rate", "GDI_Landing_Rate")
-    stat_line = "# {},{},{},{},{},{:.2f},{:.2f},{:.2E},{:.2E}\n".format(input_file, total_gtpase_tracks, total_gdi_tracks, coloc_gtpase_tracks, coloc_gdi_tracks, percent_coloc_gtpase, percent_coloc_gdi, gtpase_landing_rate, gdi_landing_rate)
+    header = "# {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format("File_Name",
+                                                    "GTPase_Count",
+                                                    "GDI_Count",
+                                                    "Colocalized_GTPase_Count",
+                                                    "Colocalized_GDI_Count",
+                                                    "Percent_Colocalized_GTPase",
+                                                    "Percent_Colocalized_GDI",
+                                                    "GTPase_Landing_Rate",
+                                                    "GDI_Landing_Rate",
+                                                    "Recruited_GTPase_Count",
+                                                    "Extracted_GTPase_Count",
+                                                    "Recruited_and_Extracted_GTPase_Count",
+                                                    "Recruited_GDI_Count",
+                                                    "Extracted_GDI_Count",
+                                                    "Recruited_and_Extracted_GDI_Count",
+                                                    "Recruited_GTPase_Percent",
+                                                    "Extracted_GTPase_Percent",
+                                                    "Recruited_and_Extracted_GTPase_Percent",
+                                                    "Recruited_GDI_Percent",
+                                                    "Extracted_GDI_Percent",
+                                                    "Recruited_and_Extracted_GDI_Percent")
+    stat_line = "# {},{},{},{},{},{:.2f},{:.2f},{:.2E},{:.2E},{},{},{},{},{},{},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}\n".format(input_file,
+                                                    total_gtpase_tracks,
+                                                    total_gdi_tracks,
+                                                    coloc_gtpase_tracks,
+                                                    coloc_gdi_tracks,
+                                                    percent_coloc_gtpase,
+                                                    percent_coloc_gdi,
+                                                    gtpase_landing_rate,
+                                                    gdi_landing_rate,
+                                                    recruited_gtpase,
+                                                    extracted_gtpase,
+                                                    intersection_gtpase,
+                                                    recruited_gdi,
+                                                    extracted_gdi,
+                                                    intersection_gdi,
+                                                    percentage_recruited_gtpase,
+                                                    percentage_extracted_gtpase,
+                                                    percentage_intersection_gtpase,
+                                                    percentage_recruited_gdi,
+                                                    percentage_extracted_gdi,
+                                                    percentage_intersection_gdi)
 
     return (header, stat_line)
 
@@ -378,3 +459,5 @@ if __name__ == '__main__':
 # 19th August, 2021
 #   --> Added functionality to annotate colocalization events as recruitment/extraction events
 #   --> Number of frames from the start/end of GTPase track to consider for recruitment/extraction can now be supplied via arguments
+# 21st August, 2021
+#   --> Now writes the number and percentages of recruitment and/or extraction events in the output file
