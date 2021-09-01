@@ -1,7 +1,6 @@
-#!/Users/roy/anaconda3/bin/python3
+#!/Users/roy/anaconda3/bin/python
 
-"""
-Identifies colocalized spots in dual channel single molecule data.
+""" Identifies colocalized spots in dual channel single molecule data.
 
 Uses spot statistics obtained by tracking single molecule spots with TrackMate (All Spots statistics file).
 Takes in two input spot statistics files for the GTPase channel and the GDI channel respectively.
@@ -78,12 +77,6 @@ def get_args():
 								help = "Last frame",
 								type = int)
 
-	# Keep initial tracks
-	parser.add_argument("--keep_initial_tracks",
-								help = "(default = False) Keep tracks that originate before first frame",
-								choices = ['True', 'False'],
-								default = 'False')
-
 	# Output file name
 	parser.add_argument("--outfile",
 								help = "(default = Colocalization.csv) Output file name",
@@ -98,39 +91,16 @@ def dataIN(filename):
 	data = pd.read_csv(filename)
 	return data
 
-#--- Eliminate tracks that appear before first frame
-def eliminate_preexisting_tracks(data):
-	# pre-existing tracks
-	preexisting_tracks = set(data[data["FRAME"] < args.first_frame]["TRACK_ID"])
-	preexisting_tracks = [n for n in preexisting_tracks if n != "None"]
-	
-	# eliminate tracks
-	for track_id in preexisting_tracks:
-		data = data[data["TRACK_ID"] != track_id]
-	
-	return data
-
 #--- Keep specified frames
 def filter_frames(data):
 
 	# filter frames according to user specifed first and last frame
 	# keep frames between first and last
 	if args.first_frame and args.last_frame:
-		# eliminate tracks that originate before first frame
-		if not (args.keep_initial_tracks == "True"):
-			data = eliminate_preexisting_tracks(data)
-			print("I am in the loop")
-		# filter by start and end frame
 		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
-
 	# keep all frames after first
 	elif args.first_frame:
-		# eliminate tracks that originate before first frame
-		if not (args.keep_initial_tracks == "True"):
-			data = eliminate_preexisting_tracks(data)
-		# filter by start frame
 		data_filtered = data[data["FRAME"] >= args.first_frame]
-
 	# keep all frames up till the last
 	else:
 		data_filtered = data[data["FRAME"] < args.last_frame]
@@ -326,24 +296,21 @@ if __name__ == '__main__':
 # Ankit Roy
 # 11th November, 2020
 # 11th April, 2021		
-#	--> Added support for colocalization detection in multiple frames.
-#	--> Colocalized spots are written to output files.
-#	--> Improved code for filtering field of view.
+#	--> added support for colocalization detection in multiple frames.
+#	--> colocalized spots are written to output files.
+#	--> improved code for filtering field of view.
 # 15th April, 2021
-#	--> Added support for specifying first/last frame.
-#	--> Now reports progress.
+#	--> added support for specifying first/last frame.
+#	--> now reports progress.
 # 16th April, 2021
-#	--> Added support for chosing output files.
+#	--> added support for chosing output files.
 #	--> Parallelized colocalization calculations.
 # 27th April, 2021
-#	--> Removed multiple outputs to streamline script use.
-#	--> Script now produces only 1 output file.
-#	--> Added ability to specify output file name.
+#	--> removed multiple outputs to streamline script use.
+#	--> script now produces only 1 output file.
+#	--> added ability to specify output file name.
 # 29th April, 2021
-#	--> Added feature to assign unique colocalization id.
-#	--> Colocalization id is written in output file.
+#	--> added feature to assign unique colocalization id.
+#	--> colocalization id is written in output file.
 # 9th August, 2021
-#	--> Now adds input arguments as meta data to output files.
-# 17th August, 2021
-#	--> Now eliminates tracks that originate before first frame
-#	--> Added option to keep tracks that originate before first frame
+#	--> now adds input arguments as meta data to output files.
