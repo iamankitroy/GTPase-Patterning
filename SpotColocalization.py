@@ -107,11 +107,10 @@ def dataIN(filename):
 #--- Tracks for control cases
 def get_control_tracks(data):
 	# control tracks
-	control_tracks = set(data[data["FRAME"] <= args.control_frame_limit]["TRACK_ID"])
-	control_tracks = [n for n in control_tracks if n != "None"]
+	control_tracks = set(data[data["FRAME"] <= args.control_frame_limit]["PSEUDO_TRACK_ID"])
 
 	# Keep only control tracks
-	data = data[data["TRACK_ID"].isin(control_tracks)]
+	data = data[data["PSEUDO_TRACK_ID"].isin(control_tracks)]
 
 	return data
 
@@ -296,11 +295,17 @@ def main():
 	print("# {:>20s} : {:^50s}".format("GDI file", args.gdi))
 	print("# Data imported")
 
+	# Add pseudo track IDs
+	gtpase_data = add_PsedoTrackID(gtpase_data)
+	gdi_data = add_PsedoTrackID(gdi_data)
+
+	# progress status
+	print("# Psedo Track IDs assigned")
+	pd.set_option('display.max_columns', None)
+
 	# filter by first and last frame
 	gtpase_data	= filter_frames(gtpase_data)
 	gdi_data = filter_frames(gdi_data)
-	pd.set_option('display.max_columns', None)
-#	print(gtpase_data)
 
 	# progress status
 	print("# Frames filtered")
@@ -315,13 +320,6 @@ def main():
 
 	# progress status
 	print("# Field of view filtered")
-
-	# Add pseudo track IDs
-	gtpase_data_fov = add_PsedoTrackID(gtpase_data_fov)
-	gdi_data_fov = add_PsedoTrackID(gdi_data_fov)
-
-	# progress status
-	print("# Psedo Track IDs assigned")
 
 	# Get colocalization
 	gtpase_coloc, gdi_coloc = get_coloc(gtpase_data_fov, gdi_data_fov)
