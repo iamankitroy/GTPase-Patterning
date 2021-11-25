@@ -126,6 +126,12 @@ def eliminate_preexisting_tracks(data):
 	
 	return data
 
+#--- Remove spot data
+def remove_spots(data):
+	# removing spots
+	data = data[data["TRACK_ID"] != "None"]
+	return data
+
 #--- Keep specified frames
 def filter_frames(data):
 
@@ -301,7 +307,10 @@ def main():
 
 	# progress status
 	print("# Psedo Track IDs assigned")
-	pd.set_option('display.max_columns', None)
+
+	# remove spot data for GTPase channel in control cases
+	if args.control == "True":
+		gtpase_data = remove_spots(gtpase_data)
 
 	# filter by first and last frame
 	gtpase_data	= filter_frames(gtpase_data)
@@ -371,3 +380,5 @@ if __name__ == '__main__':
 #	--> Added functionality to handle control cases separately.
 #	--> For control cases only tracks originating in the first few frames are considered.
 #	--> Users have option to specify the number of initial frames to consider.
+# 25th November, 2021
+#	--> Now uses only track data for the GTPase channel in control datasets.
