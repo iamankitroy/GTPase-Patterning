@@ -78,11 +78,17 @@ def get_args():
 								help = "Last frame",
 								type = int)
 
-	# Keep initial tracks
-	parser.add_argument("--keep_initial_tracks",
-								help = "(default = False) Keep tracks that originate before first frame",
+	# Analyse control cases
+	parser.add_argument("--control",
+								help = "(default = False) If set to true only analyses tracks that appear in the first few frames. The number of such frames can be set with --control_frame_limit.",
 								choices = ['True', 'False'],
 								default = 'False')
+
+	# Control frame limit
+	parser.add_argument("--control_frame_limit",
+								help = "(default = 3) Set the number of initial frames to use for analysis of control data.",
+								default = 3,
+								type = int)
 
 	# Output file name
 	parser.add_argument("--outfile",
@@ -96,6 +102,17 @@ def get_args():
 #--- Get data
 def dataIN(filename):
 	data = pd.read_csv(filename)
+	return data
+
+#--- Tracks for control cases
+def get_control_tracks(data):
+	# control tracks
+	control_tracks = set(data[data["FRAME"] <= args.control_frame_limit]["TRACK_ID"])
+	control_tracks = [n for n in control_tracks if n != "None"]
+
+	# Keep only control tracks
+	data = data[data["TRACK_ID"].isin(control_tracks)]
+
 	return data
 
 #--- Eliminate tracks that appear before first frame
@@ -113,27 +130,28 @@ def eliminate_preexisting_tracks(data):
 #--- Keep specified frames
 def filter_frames(data):
 
-	# filter frames according to user specifed first and last frame
-	# keep frames between first and last
-	if args.first_frame and args.last_frame:
-		# eliminate tracks that originate before first frame
-		if not (args.keep_initial_tracks == "True"):
-			data = eliminate_preexisting_tracks(data)
-			print("I am in the loop")
-		# filter by start and end frame
-		data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
+	# limit analysis to initial frames for control cases
+	if args.control == "True":
+		data_filtered = get_control_tracks(data)
 
-	# keep all frames after first
-	elif args.first_frame:
-		# eliminate tracks that originate before first frame
-		if not (args.keep_initial_tracks == "True"):
-			data = eliminate_preexisting_tracks(data)
-		# filter by start frame
-		data_filtered = data[data["FRAME"] >= args.first_frame]
-
-	# keep all frames up till the last
 	else:
-		data_filtered = data[data["FRAME"] < args.last_frame]
+		# filter frames according to user specifed first and last frame
+		if (args.first_frame >= 0) and (args.last_frame >= 0):
+			# eliminate tracks that originate before first frame
+			data = eliminate_preexisting_tracks(data)
+			# filter by start and end frame
+			data_filtered = data[(data["FRAME"] >= args.first_frame) & (data["FRAME"] < args.last_frame)]
+
+		# keep all frames after first
+		elif args.first_frame >= 0:
+			# eliminate tracks that originate before first frame
+			data = eliminate_preexisting_tracks(data)
+			# filter by start frame
+			data_filtered = data[data["FRAME"] >= args.first_frame]
+
+		# keep all frames up till the last
+		else:
+			data_filtered = data[data["FRAME"] < args.last_frame]
 
 	return data_filtered
 
@@ -218,7 +236,7 @@ def get_coloc(gtpase_data, gdi_data):
 	processes = []
 
 	# Calculate colocalization for every pair of spots per frame
-	for frame in range(1, total_frames):
+	for frame in range(0, total_frames):
 
 		# fetch spots from single frame
 		gtpase_data_frame = gtpase_data[gtpase_data["FRAME"] == frame]
@@ -281,6 +299,8 @@ def main():
 	# filter by first and last frame
 	gtpase_data	= filter_frames(gtpase_data)
 	gdi_data = filter_frames(gdi_data)
+	pd.set_option('display.max_columns', None)
+#	print(gtpase_data)
 
 	# progress status
 	print("# Frames filtered")
@@ -347,3 +367,9 @@ if __name__ == '__main__':
 # 17th August, 2021
 #	--> Now eliminates tracks that originate before first frame
 #	--> Added option to keep tracks that originate before first frame
+# 24th November, 2021
+#	--> Explicitly stated conditions for first and last frame to be non-zero during frame filtering.
+#	--> Fixed bug that previously eliminated frame 0 from results.
+#	--> Added functionality to handle control cases separately.
+#	--> For control cases only tracks originating in the first few frames are considered.
+#	--> Users have option to specify the number of initial frames to consider.
