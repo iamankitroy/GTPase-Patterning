@@ -8,7 +8,7 @@
 #--- Read arguments
 function read_arguments()
 {
-	param_file="input_parameters.txt"		# input parameters file
+	param_file="input_parameters.csv"		# input parameters file
 	args=`head -n 1 $param_file`			# input arguments
 }
 
@@ -37,7 +37,7 @@ function clean_parameter_file()
 function run_SpotColocalization()
 {
 	echo -e "\nRunning SpotColocalization...\n"
-	./SpotColocalization.py -d ${arg_list[-d]} -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} --first_frame ${arg_list[--first_frame]} --last_frame ${arg_list[--last_frame]} -gp ${arg_list[-gp]} -gd ${arg_list[-gd]} --outfile ${arg_list[--outfile]}
+	./SpotColocalization.py -d ${arg_list[-d]} -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} --first_frame ${arg_list[--first_frame]} --last_frame ${arg_list[--last_frame]} -gp ${arg_list[-gp]} -gd ${arg_list[-gd]} --keep_initial_tracks ${arg_list[--keep_initial_tracks]} --outfile ${arg_list[--outfile]}
 	echo -e "\nComplete!\n"
 }
 
@@ -58,6 +58,7 @@ function set_default_arguments()
 	arg_list[-is]=512
 	arg_list[--first_frame]=1
 	arg_list[--last_frame]=1000
+	arg_list[--keep_initial_tracks]="False"
 	arg_list[--outfile]="Colocalization.csv"
 }
 
