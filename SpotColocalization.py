@@ -90,6 +90,12 @@ def get_args():
 								default = 3,
 								type = int)
 
+	# Minimum track length for GTPases in control cases
+	parser.add_argument("--gtpase_track_min_length",
+								help = "(default = 5) Minimum track length of GTPases for control cases.",
+								default = 5,
+								type = int)
+
 	# Output file name
 	parser.add_argument("--outfile",
 								help = "(default = Colocalization.csv) Output file name",
@@ -131,6 +137,30 @@ def remove_spots(data):
 	# removing spots
 	data = data[data["TRACK_ID"] != "None"]
 	return data
+
+#--- Remove short tracks
+def remove_short_tracks(data):
+	# group by TRACK_ID and remove smaller tracks
+	groupings = data.groupby(["TRACK_ID"])
+
+	# long tracks
+	long_track_ids = []
+
+	# get TRACK_ID of long tracks
+	for gid, group in groupings:
+		min_frame = min(group["FRAME"])				# first frame
+		max_frame = max(group["FRAME"])				# last frame
+		track_length = max_frame - min_frame + 1	# frame length
+
+		# keep track of long tracks
+		if track_length >= args.gtpase_track_min_length:
+			long_track_ids.append(gid)
+
+	# keep only long tracks
+	data = data[data["TRACK_ID"].isin(long_track_ids)]
+	
+	return data
+
 
 #--- Keep specified frames
 def filter_frames(data):
@@ -311,6 +341,7 @@ def main():
 	# remove spot data for GTPase channel in control cases
 	if args.control == "True":
 		gtpase_data = remove_spots(gtpase_data)
+		gtpase_data = remove_short_tracks(gtpase_data)
 
 	# filter by first and last frame
 	gtpase_data	= filter_frames(gtpase_data)
@@ -382,3 +413,6 @@ if __name__ == '__main__':
 #	--> Users have option to specify the number of initial frames to consider.
 # 25th November, 2021
 #	--> Now uses only track data for the GTPase channel in control datasets.
+# 26th November, 2021
+#	--> Now uses only long tracks for the GTPase channel in control datasets.
+#	--> Track length to define long tracks can be specified by the user.  
