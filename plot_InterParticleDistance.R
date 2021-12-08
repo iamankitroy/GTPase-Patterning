@@ -21,6 +21,13 @@ ipd_plot = ggplot(data, aes(DIST)) +
 	ylab("Spot frequency") +
 	ggtitle(plot_title)
 
+# Save static plot
+ggsave(static_plot_outfile,
+	   height = 4,
+	   width = 6,
+	   units = "in",
+	   dpi = "300")
+
 # Interparticle distance plot animated over frames
 ipd_plot_anim = ipd_plot +
 	transition_manual(FRAME) +
