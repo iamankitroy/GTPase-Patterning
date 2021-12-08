@@ -23,6 +23,7 @@ ipd_plot = ggplot(data, aes(DIST)) +
 
 # Save static plot
 ggsave(static_plot_outfile,
+	   plot = ipd_plot,
 	   height = 4,
 	   width = 6,
 	   units = "in",
