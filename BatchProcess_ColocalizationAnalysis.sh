@@ -37,7 +37,7 @@ function clean_parameter_file()
 function run_SpotColocalization()
 {
 	echo -e "\nRunning SpotColocalization...\n"
-	./SpotColocalization.py -d ${arg_list[-d]} -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} --first_frame ${arg_list[--first_frame]} --last_frame ${arg_list[--last_frame]} -gp ${arg_list[-gp]} -gd ${arg_list[-gd]} --control ${arg_list[--control]} --control_frame_limit ${arg_list[--control_frame_limit]} --outfile ${arg_list[--outfile]}
+	./SpotColocalization.py -d ${arg_list[-d]} -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} --first_frame ${arg_list[--first_frame]} --last_frame ${arg_list[--last_frame]} -gp ${arg_list[-gp]} -gd ${arg_list[-gd]} --control ${arg_list[--control]} --control_frame_limit ${arg_list[--control_frame_limit]} --gtpase_track_min_length ${arg_list[--gtpase_track_min_length]} --outfile ${arg_list[--outfile]}
 	echo -e "\nComplete!\n"
 }
 
@@ -45,7 +45,7 @@ function run_SpotColocalization()
 function run_getStat_TrackColocalized()
 {
 	echo -e "\nRunning getStat_TrackColocalized...\n"
-	python getStat_TracksColocalized.py -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} -cf ${arg_list[--outfile]}
+	python getStat_TracksColocalized.py -fov ${arg_list[-fov]} -ps ${arg_list[-ps]} -is ${arg_list[-is]} --limit_free_gdi ${arg_list[--limit_free_gdi]} -cf ${arg_list[--outfile]}
 	echo -e "\nComplete!\n"
 }
 
@@ -61,6 +61,8 @@ function set_default_arguments()
 	arg_list[--control]="False"
 	arg_list[--control_frame_limit]=3
 	arg_list[--outfile]="Colocalization.csv"
+	arg_list[--gtpase_track_min_length]=5
+	arg_list[--limit_free_gdi]="True"
 }
 
 #--- Construct argument list and run sub process
@@ -122,3 +124,5 @@ automate
 # 13th August, 2021
 # 16th August, 2021
 #	-->	Updated script to use associative arrays to parse argparse arguments
+# 9th December, 2021
+# 	--> Now accepts more arguments for automation (--control, --control_frame_limit, --gtpase_track_min_length, --limit_free_gdi)
