@@ -169,22 +169,30 @@ def get_trueEvents(data, coloc_id, condition, frame_threshold):
     
     # Identify recruitment events
     if condition == "recruitment":
-        # GTPase enters
-        enter_gtpase = min(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
-        # First colocalization event of GTPase
-        first_coloc = min(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
-        
-        # True if colocalization within first few frames of GTPase
-        return (first_coloc - enter_gtpase) < frame_threshold
+        # Error handeled for orphan spots
+        try:
+            # GTPase enters
+            enter_gtpase = min(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
+            # First colocalization event of GTPase
+            first_coloc = min(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
+
+            # True if colocalization within first few frames of GTPase
+            return (first_coloc - enter_gtpase) < frame_threshold
+        except:
+            return False
 
     else:
-        # GTPase exits
-        exit_gtpase = max(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
-        # Last colocalization event of GTPase
-        last_coloc = max(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
+        # Error handeled for orphan spots
+        try:
+            # GTPase exits
+            exit_gtpase = max(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
+            # Last colocalization event of GTPase
+            last_coloc = max(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
 
-        # True if colocalization within last few frames of GTPase
-        return (exit_gtpase - last_coloc) < frame_threshold
+            # True if colocalization within last few frames of GTPase
+            return (exit_gtpase - last_coloc) < frame_threshold
+        except:
+            return False
 
 #--- Annotate spot
 def annoteSpots(data, recruitment_events, extraction_events):
@@ -461,3 +469,5 @@ if __name__ == '__main__':
 #   --> Number of frames from the start/end of GTPase track to consider for recruitment/extraction can now be supplied via arguments
 # 21st August, 2021
 #   --> Now writes the number and percentages of recruitment and/or extraction events in the output file
+# 14th January, 2022
+#	--> Fixed an issue with orphan tracks
