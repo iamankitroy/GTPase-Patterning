@@ -196,7 +196,7 @@ def get_trueEvents(data, coloc_id, condition, frame_threshold):
 			return False
 
 #--- Annotate spot
-def annoteSpots(data, recruitment_events, extraction_events):
+def annotateSpots(data, recruitment_events, extraction_events):
 	data["ANNOTATION_SPOT"] = np.nan						# initiate spot annotation
 
 	# Annotate recruited spots
@@ -216,7 +216,7 @@ def getTrack_from_Colocalization(coloc_ids, molecule):
 	return pseudo_track_ids
 
 #--- Annotate tracks
-def annoteTracks(data, recruitment_events, extraction_events):
+def annotateTracks(data, recruitment_events, extraction_events):
 	data["ANNOTATION_TRACK"] = "None"
 
 	# Recruited and/or extracted tracks
@@ -282,10 +282,10 @@ def annotateEvents(data, recruitment_frame_threshold, extraction_frame_threshold
 	extraction_events = [c for c in coloc_ids if get_trueEvents(data, c, "extraction", extraction_frame_threshold)]
 
 	# Annotate spots
-	data = annoteSpots(data, recruitment_events, extraction_events)
+	data = annotateSpots(data, recruitment_events, extraction_events)
 
 	# Annotate tracks
-	data = annoteTracks(data, recruitment_events, extraction_events)
+	data = annotateTracks(data, recruitment_events, extraction_events)
 
 	# with pd.option_context('display.max_rows', None, 'display.max_columns', None):
 	#	 print(data.loc[(data["CHANNEL"] == "GTPase") & (data["ANNOTATION_TRACK"] == "Recruitment and Extraction"), ].groupby("PSEUDO_TRACK_ID").agg('count')[["FRAME", "ANNOTATION_TRACK"]])
@@ -432,7 +432,12 @@ def main():
 	# Exit if no colocalizations are found
 	if sub_coloc_data.empty:
 		print("No colocalization found!")
-		sys.exit()
+		sub_coloc_data["TOTAL_FRAME_COUNT"] = 0
+		sub_coloc_data["COLOCALIZED_FRAME_COUNT"] = 0
+		sub_coloc_data["FREE_FRAME_COUNT"] = 0
+		sub_coloc_data["COLOCALIZED_FRAME_FRACTION"] = 0
+		sub_coloc_data["ANNOTATION_SPOT"] = 0
+		sub_coloc_data["ANNOTATION_TRACK"] = 0
 
 	# Get number of colocalized frames
 	sub_coloc_data = count_ColocalizedFrames(sub_coloc_data)
@@ -479,3 +484,5 @@ if __name__ == '__main__':
 #	--> Fixed an issue with orphan tracks
 # 17th January, 2022
 #	--> Execution stops if no colocalization is found
+# 20th January, 2022
+#	--> Complete script is executed and a subset file is generated even if no colocalizations are found
