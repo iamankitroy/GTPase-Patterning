@@ -2,6 +2,7 @@
 
 import pandas as pd
 import sys
+import numpy as np
  
 __author__ = "Ankit Roy"
 __copyright__ = "Copyright 2022, Bieling Lab, Max Planck Institute of Molecular Physiology"
@@ -71,16 +72,21 @@ def classifyFrames(data):
 	extractionStats = {}
 	internalStats = {}
 
+	# store track start
+	track_start = {}
+
 	# store event probabilities alone
 	recruitmentProbs = []
 	extractionProbs = []
 	internalProbs = []
 
-	# 
+	# Get recruitment, extraction and internal colocalization probabilities for every pseudo track
 	for gid, group in groupings:
 		min_frame = min(group["FRAME"])				# first frame
 		max_frame = max(group["FRAME"])				# last frame
 		track_length = max_frame - min_frame + 1	# track length
+
+		track_start[gid] = min_frame				# store track start frames
 
 		# Skip smaller tracks
 		if track_length < min_track_length:
@@ -95,10 +101,42 @@ def classifyFrames(data):
 
 		# store internal colocalization probability if present
 		if internalStats[gid][2] != 'NA':
-			internalProbs.append(internalStats[gid][2])
+			internalProbs.append(internalStats[gid][2])				# store internal colocalization probabilities
 
-	return recruitmentProbs, extractionProbs, internalProbs
+	# Normalized frame data
+	data["NORMALIZED_FRAME"] = data.apply(lambda x: x["FRAME"] - track_start[x["PSEUDO_TRACK_ID"]], axis = 1)
 
+	return recruitmentProbs, extractionProbs, internalProbs, data
+
+# Generate plotabble output
+def gen_plotOut(recruitmentProbs, extractionProbs, internalProbs):
+
+	values = []						# probabilities
+	labels = []						# labels
+
+	values.extend(recruitmentProbs)	# store recruitment probabilities
+	values.extend(extractionProbs)	# store extraction probabilities
+	values.extend(internalProbs)	# store internal colocalization probabilities
+
+	labels.extend(["Recruitment"]*len(recruitmentProbs))	# store recruitment labels
+	labels.extend(["Extraction"]*len(extractionProbs))		# store recruitment labels
+	labels.extend(["Internal"]*len(internalProbs))			# store recruitment labels
+
+	plotData = pd.DataFrame({
+		"Probabilities": values,
+		"Classes": labels
+		})
+
+	return plotData
+
+# Generate plot file
+def gen_plotFile(data, filename):
+
+	outname = filename[:-4]
+	outname = f"{outname}_probPlot.csv"						# output file name
+
+	# write plot file
+	data.to_csv(outname, index=False, float_format="%.3f")
 
 # Main function
 def main():
@@ -118,8 +156,13 @@ def main():
 	data = singleChannel(data)		# GTPase channel data
 
 	# classify frames into recruitment, extraction or internal and calculate probabilities
-	recruitmentProbs, extractionProbs, internalProbs = classifyFrames(data)
+	recruitmentProbs, extractionProbs, internalProbs, data = classifyFrames(data)
 
+	# generate data frame with plottable data
+	plotData = gen_plotOut(recruitmentProbs, extractionProbs, internalProbs)
+
+	# write plot file
+	gen_plotFile(plotData, filename)
 
 # Run main function
 main()
@@ -127,3 +170,4 @@ main()
 # Ankit Roy
 # 21st January, 2022
 # 25th January, 2022		>>		Classifies tracks into recruitment, extraction and internal frames and returns event probabilities
+# 27th January, 2022		>>		Now writes out a file with colocalization probabilities in a plotable format

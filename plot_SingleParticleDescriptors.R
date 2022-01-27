@@ -1,7 +1,7 @@
 library(dplyr)
 library(ggplot2)
 
-data = read.csv("/Users/roy/Sandbox/bug_fix/control_data.csv", comment.char = "#")
+data = read.csv("/Users/roy/Sandbox/Redo_26.01.22/PC_GEF_100_pm_complex_GTP_1_colocalisation.csv", comment.char = "#")
 
 dt = 0.022
 protein = "GTPase"
