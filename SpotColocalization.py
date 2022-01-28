@@ -90,9 +90,9 @@ def get_args():
 								default = 3,
 								type = int)
 
-	# Minimum track length for GTPases in control cases
+	# Minimum track length for GTPases
 	parser.add_argument("--gtpase_track_min_length",
-								help = "(default = 5) Minimum track length of GTPases for control cases.",
+								help = "(default = 5) Minimum track length of GTPases.",
 								default = 5,
 								type = int)
 
@@ -196,8 +196,12 @@ def filter_fov(data):
 	# field of view threshold
 	threshold = args.image_size * args.pixel_size * args.field
 
-	# filter spots inside field of view
-	data_fov = data[(data["POSITION_X"] < threshold) & (data["POSITION_Y"] < threshold)]
+	# outlier pseudo ids
+	data_outliers = data.loc[(data["POSITION_X"] >= threshold) | (data["POSITION_Y"] >= threshold), "PSEUDO_TRACK_ID"]
+	# outlier filter
+	data_outliers_filter = ~data["PSEUDO_TRACK_ID"].isin(data_outliers)
+	# filtering outliers
+	data_fov = data[data_outliers_filter]
 
 	return data_fov
 
@@ -338,8 +342,8 @@ def main():
 	# progress status
 	print("# Psedo Track IDs assigned")
 
-	# remove spot data for GTPase channel in control cases
-	if args.control == "True":
+	# remove spot data for GTPase channel
+	if args.gtpase_track_min_length > 1:
 		gtpase_data = remove_spots(gtpase_data)
 		gtpase_data = remove_short_tracks(gtpase_data)
 
@@ -415,4 +419,7 @@ if __name__ == '__main__':
 #	--> Now uses only track data for the GTPase channel in control datasets.
 # 26th November, 2021
 #	--> Now uses only long tracks for the GTPase channel in control datasets.
-#	--> Track length to define long tracks can be specified by the user.  
+#	--> Track length to define long tracks can be specified by the user.
+# 28th January, 2022
+#	--> Universal GTPase track length parameter added
+#	--> Now eliminates entire tracks that move out of the field of view even momentarily
