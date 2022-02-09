@@ -3,6 +3,9 @@ library(dplyr)
 
 data = read.csv("/Users/roy/Sandbox/plotProbabilities_positionSpecific_2022.02.02/MM_100_pM_complex_GDP_1_colocalisation_5_subset.csv", comment.char = "#")
 
+data = data %>%
+	subset(CHANNEL == "GTPase")
+
 data_subset = data %>%
 	subset(CHANNEL == "GTPase" &
 		   	(ANNOTATION_TRACK == "Recruitment" |

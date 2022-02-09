@@ -10,6 +10,7 @@ for (filename in files) {
 
 	# plot file name
 	plotname = paste(substr(filename, 0, nchar(filename)-3), ".png", sep = "")
+	#plotname = paste(substr(filename, 0, nchar(filename)-3), "_full.png", sep = "")
 	
 	# probability data
 	probData = read.csv(paste(path, filename, sep = ""))
@@ -18,6 +19,7 @@ for (filename in files) {
 	# plot
 	probPlot_complete = ggplot(probData, aes(Classes, Probabilities)) +
 		geom_boxplot() +
+		stat_summary(fun.y=mean, geom="point", shape=20, size=8, color="red", fill="red") +
 		geom_jitter(width = 0.2) +
 		xlab("Colocalization Type") +
 		ylab("Probability (colocalization/frame)") +
@@ -27,7 +29,8 @@ for (filename in files) {
 		scale_y_continuous(limits = c(0, 0.2))
 
 	#ggsave(plot = probPlot_complete,
-	#	   path = path)
+	#	   path = path,
+	#	   filename = plotname)
 	ggsave(plot = probPlot_truncated,
 		   path = path,
 		   filename = plotname)
