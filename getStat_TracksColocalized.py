@@ -72,7 +72,15 @@ def get_args():
 
 #--- Get data
 def dataIN(filename):
-	data = pd.read_csv(filename, comment="#")
+	data = pd.read_csv(filename,
+		comment="#",
+		dtype = {
+			"TRACK_ID" : str,
+			"PSEUDO_TRACK_ID" : str,
+			"COLOCALIZED_SPOT" : bool,
+			"COLOCALIZATION_ID": str,
+			"CHANNEL" : str
+			})
 	return data
 
 #--- Modify field
@@ -176,6 +184,7 @@ def get_trueEvents(data, coloc_id, condition, frame_threshold):
 			enter_gtpase = min(data.loc[(data["PSEUDO_TRACK_ID"] == gtpase_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
 			# First colocalization event of GTPase
 			first_coloc = min(data.loc[(data["COLOCALIZATION_ID"] == coloc_id) & (data["CHANNEL"] == "GTPase"), "FRAME"])
+			frame_diff = first_coloc - enter_gtpase
 
 			# True if colocalization within first few frames of GTPase
 			return (first_coloc - enter_gtpase) < frame_threshold
@@ -419,6 +428,7 @@ def dataOUT(data_frame, outname, header, stat_line):
 #--- Main function
 def main():
 	global args
+	pd.set_option('display.max_columns', None)
 
 	args = get_args()								# input arguments
 	coloc_data = dataIN(args.colocalization_file)	# Colocalization data
@@ -486,3 +496,5 @@ if __name__ == '__main__':
 #	--> Execution stops if no colocalization is found
 # 20th January, 2022
 #	--> Complete script is executed and a subset file is generated even if no colocalizations are found
+# 9th February, 2022
+#	--> Input data types for some columns are explicitly mentioned to avoid pandas from guessing data types
