@@ -208,10 +208,10 @@ def get_trueEvents(data, coloc_id, condition, frame_threshold):
 def annotateSpots(data, recruitment_events, extraction_events):
 	data["ANNOTATION_SPOT"] = np.nan						# initiate spot annotation
 
-	# Annotate recruited spots
-	data["ANNOTATION_SPOT"] = data.apply(lambda x: "Recruitment" if x["COLOCALIZATION_ID"] in recruitment_events else x["ANNOTATION_SPOT"], axis = 1)
 	# Annotate extracted spots
 	data["ANNOTATION_SPOT"] = data.apply(lambda x: "Extraction" if x["COLOCALIZATION_ID"] in extraction_events else x["ANNOTATION_SPOT"], axis = 1)
+	# Annotate recruited spots
+	data["ANNOTATION_SPOT"] = data.apply(lambda x: "Recruitment" if x["COLOCALIZATION_ID"] in recruitment_events else x["ANNOTATION_SPOT"], axis = 1)
 
 	return data
 
@@ -498,3 +498,4 @@ if __name__ == '__main__':
 #	--> Complete script is executed and a subset file is generated even if no colocalizations are found
 # 9th February, 2022
 #	--> Input data types for some columns are explicitly mentioned to avoid pandas from guessing data types
+#	--> Annotates recruitment spots after annotating extraction spots to prevent extraction events from overwriting recruitments
