@@ -5,7 +5,14 @@ import pandas as pd
 
 #--- Get data
 def dataIN(filename):
-	data = pd.read_csv(filename, comment="#")
+	data = pd.read_csv(filename, comment="#",
+			dtype = {
+				"TRACK_ID" : str,
+				"PSEUDO_TRACK_ID" : str,
+				"COLOCALIZED_SPOT" : bool,
+				"COLOCALIZATION_ID": str,
+				"CHANNEL" : str
+				})
 	return data
 
 #--- Get single channel data
@@ -98,4 +105,5 @@ def main():
 main()
 
 # Ankit Roy
-# 2nd February, 2021
+# 2nd February, 2022
+# 10th February, 2022	--> Explicitly states the data types for certain columns of input file
