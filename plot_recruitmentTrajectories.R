@@ -9,11 +9,11 @@ fov = 0.75
 threshold = im_size * px_size * fov
 
 # path to plot files
-path = "/Users/roy/Sandbox/recruitmentCount_bugFix_2022.02.07/final_data/"
+path = "/Users/roy/Sandbox/recruitmentTrajectories_2022.02.10/all_files/"
 
 # all plottable data files
 files = list.files(path = path,
-				   pattern = "*_subset.csv")
+				   pattern = "*_5_subset.csv")
 
 for (filename in files) {
 
@@ -41,6 +41,7 @@ for (filename in files) {
 						   expand = c(0, 0)) +
 		scale_y_continuous(limits = c(0, threshold),
 						   expand = c(0, 0)) +
+		coord_fixed() +
 		ggtitle(filename) +
 		xlab("x-coordinate") +
 		ylab("y-coordinate") +
