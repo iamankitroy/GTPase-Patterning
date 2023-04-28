@@ -2,7 +2,7 @@ library(ggplot2)
 library(dplyr)
 
 # path to plot files
-path = "/Users/roy/Sandbox/plotProbabilities_positionSpecific_2022.02.02/all_files/combined_replicates/"
+path = "/Users/roy/Sandbox/plotProbabilities_positionSpecific_2022.02.02/selected_files_28.03.2022/combined_replicates/"
 
 # all plottable data files
 files = list.files(path = path,
@@ -11,7 +11,7 @@ files = list.files(path = path,
 for (filename in files) {
 	
 	# plot file name
-	plotname = paste(substr(filename, 0, nchar(filename)-4), ".png", sep = "")
+	plotname = paste(substr(filename, 0, nchar(filename)-4), ".svg", sep = "")
 	
 	data = read.csv(paste(path, filename, sep = ""), comment.char = "#")
 	
@@ -27,7 +27,7 @@ for (filename in files) {
 		geom_point() +
 		scale_x_continuous(limits = c(0, 100),
 						   breaks = seq(0, 100, 5)) +
-		scale_y_continuous(limits = c(-0.1, 0.5)) +
+		scale_y_continuous(limits = c(-0.01, 0.05)) +
 		xlab("Track Lifetime (frame)") +
 		ylab("Colocalisation Probability") +
 		ggtitle(filename) +
@@ -35,11 +35,15 @@ for (filename in files) {
 							 high = "red",
 							 name = "Number of Spots") +
 		theme_bw() +
-		theme(legend.position = "bottom")
+		theme(legend.position = "bottom",
+			  legend.key.width = unit(2.5, "cm"))
 	
 	ggsave(filename = plotname,
 		   path = path,
-		   plot = probPlot)
+		   plot = probPlot,
+		   height = 8,
+		   width = 12,
+		   units = "in")
 	
 }
 
