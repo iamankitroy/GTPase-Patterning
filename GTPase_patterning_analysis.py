@@ -127,6 +127,7 @@ def main():
     # Write output files
     dataOUT(analyzed_data, segmented_file)
 
+# Run main function
 main()
 
 # Ankit Roy
