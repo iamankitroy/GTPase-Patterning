@@ -500,4 +500,4 @@ if __name__ == '__main__':
 #	--> Input data types for some columns are explicitly mentioned to avoid pandas from guessing data types
 #	--> Annotates recruitment spots after annotating extraction spots to prevent extraction events from overwriting recruitments
 # 29th February, 2024
-#	--> BUG: Forgot to square the image dimensions to calculated landing rate in frame/µm^2. This has now been fixed.
+#	--> BUG: Forgot to square the image dimensions to calculated landing rate in /frame/µm^2. This has now been fixed.
