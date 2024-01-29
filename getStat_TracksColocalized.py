@@ -315,8 +315,8 @@ def calcLandingRate(data):
 	gdi_landing = len(set(data.loc[data["CHANNEL"] == "GDI", "PSEUDO_TRACK_ID"]))
 
 	# Landing rate
-	gtpase_landing_rate = gtpase_landing/(total_frames * image_size * pixel_size * fov)
-	gdi_landing_rate = gdi_landing/(total_frames * image_size * pixel_size * fov)
+	gtpase_landing_rate = gtpase_landing/(total_frames * (image_size * pixel_size * fov)**2)
+	gdi_landing_rate = gdi_landing/(total_frames * (image_size * pixel_size * fov)**2)
 	
 	return (gtpase_landing_rate, gdi_landing_rate)
 
@@ -499,3 +499,5 @@ if __name__ == '__main__':
 # 9th February, 2022
 #	--> Input data types for some columns are explicitly mentioned to avoid pandas from guessing data types
 #	--> Annotates recruitment spots after annotating extraction spots to prevent extraction events from overwriting recruitments
+# 29th February, 2024
+#	--> BUG: Forgot to square the image dimensions to calculated landing rate in frame/µm^2. This has now been fixed.
