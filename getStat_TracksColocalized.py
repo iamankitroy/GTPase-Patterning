@@ -65,6 +65,12 @@ def get_args():
 								help = "(default = 512 px) Image size",
 								default = 512,
 								type = int)
+
+	# Time resolution
+	parser.add_argument("-tr", "--time_resolution",
+								help = "(default = 0.022 s) Time resolution",
+								default = 0.022,
+								type = float)
 	
 	args = parser.parse_args()
 
@@ -306,6 +312,7 @@ def calcLandingRate(data):
 	fov = args.field				# field of view
 	image_size = args.image_size	# image size in pixels
 	pixel_size = args.pixel_size	# pixel size in µm
+	time_resolution = args.time_resolution	# time resolution in s
 
 	# Total number of frames
 	total_frames = max(set(data["FRAME"]))
@@ -315,8 +322,8 @@ def calcLandingRate(data):
 	gdi_landing = len(set(data.loc[data["CHANNEL"] == "GDI", "PSEUDO_TRACK_ID"]))
 
 	# Landing rate
-	gtpase_landing_rate = gtpase_landing/(total_frames * (image_size * pixel_size * fov)**2)
-	gdi_landing_rate = gdi_landing/(total_frames * (image_size * pixel_size * fov)**2)
+	gtpase_landing_rate = gtpase_landing/(total_frames * time_resolution * (image_size * pixel_size * fov)**2)
+	gdi_landing_rate = gdi_landing/(total_frames * time_resolution * (image_size * pixel_size * fov)**2)
 	
 	return (gtpase_landing_rate, gdi_landing_rate)
 
@@ -501,3 +508,4 @@ if __name__ == '__main__':
 #	--> Annotates recruitment spots after annotating extraction spots to prevent extraction events from overwriting recruitments
 # 29th February, 2024
 #	--> BUG: Forgot to square the image dimensions to calculated landing rate in /frame/µm^2. This has now been fixed.
+#	--> Updated calcLandingRate function to calculate landing rate in units of /s/µm^2 instead of /frame/µm^2.
