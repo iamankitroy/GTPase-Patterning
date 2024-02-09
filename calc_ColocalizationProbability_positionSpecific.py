@@ -61,7 +61,7 @@ def get_posProbs(data):
 	return posProbs
 
 #--- Generate plotabble data
-def gen_plotOut(posProbs):
+def gen_plotOut(posProbs, time_resolution):
 
 	frames = sorted(list(posProbs.keys()))			# normalized frames
 	probs = [posProbs[key][0] for key in frames]	# position specific colocalization probabilities
@@ -73,6 +73,9 @@ def gen_plotOut(posProbs):
 		"PROBS": probs,
 		"NOBS": nobs
 	})
+
+	# calculate lifetime
+	posProbs_df["LIFETIME"] = posProbs_df["FRAME"] * time_resolution
 
 	return posProbs_df
 
@@ -88,6 +91,9 @@ def gen_plotFile(posProbs, filename):
 #--- Main function
 def main():
 	filename = sys.argv[1]				# file name
+
+	time_resolution = 0.022				# s
+
 	data = dataIN(filename)				# load single molecule data
 	pd.set_option('display.max_columns', None)
 
@@ -97,7 +103,7 @@ def main():
 
 	posProbs = get_posProbs(data)		# positional colocalization probability and observation counts
 
-	posProbs = gen_plotOut(posProbs)	# convert to plottable data frame
+	posProbs = gen_plotOut(posProbs, time_resolution)	# convert to plottable data frame
 
 	gen_plotFile(posProbs, filename)	# generate plot file
 
@@ -107,3 +113,4 @@ main()
 # Ankit Roy
 # 2nd February, 2022
 # 10th February, 2022	--> Explicitly states the data types for certain columns of input file
+# 9th February, 2024	--> Now calculates lifetime from time resolution
