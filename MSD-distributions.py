@@ -1,3 +1,5 @@
+#!/Users/roy/mambaforge/bin/python
+
 # This script is used to calculate the distribution of Mean Squared Displacement for Single Molecule tracks.
 
 import pandas as pd
@@ -77,7 +79,7 @@ def calc_MSD(data, time_interval = 0.022):
     msd_data = pd.DataFrame(
         {
             'Step' : all_steps,
-            'Time' : all_steps * time_interval,
+            'Time' : round(all_steps * time_interval, 3),
             'Count' : all_counts,
             'MSD' : all_msds
         }
@@ -118,6 +120,9 @@ def plotData(msd_data, outname, save=True):
 
 # Write data
 def dataOUT(msd_data, outname):
+    # add column with filename
+    msd_data["Filename"] = outname
+
     outname = f'{outname}_MSD-data.csv'
     msd_data.to_csv(outname, index = False)
 
@@ -137,3 +142,5 @@ main()
 
 # Ankit Roy
 # 25th March, 2024
+# 26th March, 2024      >>      Now adds a column with filename in output file
+#                       >>      Also rounds the time column to 3 decimal places
