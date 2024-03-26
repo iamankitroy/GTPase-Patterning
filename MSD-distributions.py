@@ -1,6 +1,7 @@
 #!/Users/roy/mambaforge/bin/python
 
 # This script is used to calculate the distribution of Mean Squared Displacement for Single Molecule tracks.
+# Input: Step size data file generated using StepSize-distribution.R
 
 import pandas as pd
 import numpy as np
