@@ -21,8 +21,10 @@ parser$add_argument('-l', '--last_frame',
 
 args = parser$parse_args()
 
-# Time resolution in s
-dt = 0.022
+dt = 0.022			# Time resolution in s
+im_size = 512		# image size in px
+px_size = 0.178		# pixel size in µm
+im_size_mu = im_size * px_size		# image size in µm
 
 # Track data from colocalisation files
 track_data = read.csv(args$in_file, comment.char = "#")
@@ -31,8 +33,8 @@ track_data = read.csv(args$in_file, comment.char = "#")
 track_data_subset = track_data %>%
 	subset(TRACK_ID != "None") %>%										# remove spots that do not form tracks
 	subset(FRAME >= args$first_frame & FRAME <= args$last_frame) %>%	# specific time frame
-#	subset(POSITION_X >= crop_x & POSITION_X <= crop_x+crop_size) %>%	# crop region in x dimension
-#	subset(POSITION_Y >= crop_y & POSITION_Y <= crop_y+crop_size) %>%	# crop region in y dimension
+	# subset(POSITION_X >= crop_x & POSITION_X <= crop_x+crop_size) %>%	# crop region in x dimension
+	# subset(POSITION_Y >= crop_y & POSITION_Y <= crop_y+crop_size) %>%	# crop region in y dimension
 	group_by(TRACK_ID) %>%												# group by TRACK_ID
 	summarise(TRACK_ID,
 			  FRAME,
@@ -63,8 +65,10 @@ traj_plot = ggplot(track_data_subset,
 			  lineend = "round") +
 	geom_point(data = end_points,
 			   aes(POSITION_X, POSITION_Y, group=factor(TRACK_ID)), color='black', size=1) +
-	scale_x_continuous(expand = c(0,0)) +
+	scale_x_continuous(expand = c(0,0),
+					   limits = c(0, im_size_mu)) +
 	scale_y_continuous(expand = c(0,0),
+					   limits = c(im_size_mu, 0),
 					   trans = "reverse") +
 	scale_color_gradient(low = "#edf8b1",
 						 high = "#253494",
