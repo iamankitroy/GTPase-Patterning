@@ -93,3 +93,4 @@ ggsave(filename = args$out_file, traj_plot)
 
 # Ankit Roy
 # 26th March, 2024		>>		Derived from plot_Trajectories.R and updated for full-frame plots using TrackMate output files.
+# 9th April, 2024		>>		Updated script to fix x and y axis to be set to the maximum image size
