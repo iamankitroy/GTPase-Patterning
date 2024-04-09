@@ -24,7 +24,8 @@ args = parser$parse_args()
 dt = 0.022			# Time resolution in s
 im_size = 512		# image size in px
 px_size = 0.178		# pixel size in µm
-im_size_mu = im_size * px_size		# image size in µm
+fov = 0.75			# field of view
+im_size_mu = im_size * px_size * fov	# image size in µm
 
 # Track data from colocalisation files
 track_data = read.csv(args$in_file, comment.char = "#")
@@ -94,3 +95,4 @@ ggsave(filename = args$out_file, traj_plot)
 # Ankit Roy
 # 26th March, 2024		>>		Derived from plot_Trajectories.R and updated for full-frame plots using TrackMate output files.
 # 9th April, 2024		>>		Updated script to fix x and y axis to be set to the maximum image size
+#						>>		Also updated script to use field of view
